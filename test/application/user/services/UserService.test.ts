@@ -3,6 +3,7 @@ import { UserService } from "../../../../src/application/user/services/UserServi
 import { IUserRepository } from "../../../../src/domain/user/repositories/IUserRepository";
 import { ISkillRepository } from "../../../../src/domain/skill/repositories/ISkillRepository";
 import { IEducationRepository } from "../../../../src/domain/education/repositories/IEducationRepository";
+import { IFileStorageService } from "../../../../src/domain/profile/services/IFileStorageService";
 import { CreateUserDTO } from "../../../../src/application/user/dtos/CreateUserDTO";
 import { UpdateUserDTO } from "../../../../src/application/user/dtos/UpdateUserDTO";
 import { AppError } from "../../../../src/shared/errors/AppError";
@@ -13,6 +14,7 @@ describe("UserService", () => {
   let mockRepository: IUserRepository;
   let mockSkillRepository: ISkillRepository;
   let mockEducationRepository: IEducationRepository;
+  let mockFileStorage: IFileStorageService;
 
   const mockUser: User = {
     id: "550e8400-e29b-41d4-a716-446655440000",
@@ -51,7 +53,13 @@ describe("UserService", () => {
       replaceForUser: vi.fn(),
       findByUserId: vi.fn(),
     };
-    userService = new UserService(mockRepository, mockSkillRepository, mockEducationRepository);
+    mockFileStorage = {
+      save: vi.fn(),
+      delete: vi.fn().mockResolvedValue(undefined),
+      getAbsolutePath: vi.fn(),
+      exists: vi.fn(),
+    };
+    userService = new UserService(mockRepository, mockSkillRepository, mockEducationRepository, mockFileStorage);
   });
 
   describe("create", () => {
@@ -401,6 +409,148 @@ describe("UserService", () => {
       expect(result.skills).toEqual(mockUser.skills);
       expect(result.educations).toEqual(mockUser.educations);
       expect(mockRepository.findByEmail).not.toHaveBeenCalled();
+    });
+
+    it("should delete old photo when photoUrl changes", async () => {
+      const userId = mockUser.id;
+      const newPhotoUrl = "test-uuid-new.jpg";
+      const dto: UpdateUserDTO = {
+        wantedJobTitle: "Senior Software Engineer",
+        firstName: "John",
+        lastName: "Doe",
+        email: "john.new@example.com",
+        phone: "+6281234567890",
+        country: "Indonesia",
+        city: "Jakarta",
+        address: "Jl. Merdeka 456",
+        postalCode: "12345",
+        drivingLicense: "DL123456",
+        nationality: "Indonesian",
+        placeOfBirth: "Jakarta",
+        dateOfBirth: new Date("1990-01-15"),
+        photoUrl: newPhotoUrl,
+      };
+
+      const updatedUser = {
+        ...mockUser,
+        photoUrl: newPhotoUrl,
+        skills: [],
+        educations: [],
+      };
+
+      vi.mocked(mockRepository.findById).mockResolvedValue(mockUser);
+      vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
+      vi.mocked(mockRepository.update).mockResolvedValue(updatedUser);
+      vi.mocked(mockFileStorage.delete).mockResolvedValue(undefined);
+
+      await userService.update(userId, dto);
+
+      expect(mockFileStorage.delete).toHaveBeenCalledWith(mockUser.photoUrl);
+    });
+
+    it("should not delete photo when photoUrl is same", async () => {
+      const userId = mockUser.id;
+      const dto: UpdateUserDTO = {
+        wantedJobTitle: "Senior Software Engineer",
+        firstName: "John",
+        lastName: "Doe",
+        email: "john.new@example.com",
+        phone: "+6281234567890",
+        country: "Indonesia",
+        city: "Jakarta",
+        address: "Jl. Merdeka 456",
+        postalCode: "12345",
+        drivingLicense: "DL123456",
+        nationality: "Indonesian",
+        placeOfBirth: "Jakarta",
+        dateOfBirth: new Date("1990-01-15"),
+        photoUrl: mockUser.photoUrl,
+      };
+
+      const updatedUser = {
+        ...mockUser,
+        skills: [],
+        educations: [],
+      };
+
+      vi.mocked(mockRepository.findById).mockResolvedValue(mockUser);
+      vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
+      vi.mocked(mockRepository.update).mockResolvedValue(updatedUser);
+
+      await userService.update(userId, dto);
+
+      expect(mockFileStorage.delete).not.toHaveBeenCalled();
+    });
+
+    it("should not delete photo when photoUrl is undefined in dto", async () => {
+      const userId = mockUser.id;
+      const dto: UpdateUserDTO = {
+        wantedJobTitle: "Senior Software Engineer",
+        firstName: "John",
+        lastName: "Doe",
+        email: "john.new@example.com",
+        phone: "+6281234567890",
+        country: "Indonesia",
+        city: "Jakarta",
+        address: "Jl. Merdeka 456",
+        postalCode: "12345",
+        drivingLicense: "DL123456",
+        nationality: "Indonesian",
+        placeOfBirth: "Jakarta",
+        dateOfBirth: new Date("1990-01-15"),
+      };
+
+      const updatedUser = {
+        ...mockUser,
+        skills: [],
+        educations: [],
+      };
+
+      vi.mocked(mockRepository.findById).mockResolvedValue(mockUser);
+      vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
+      vi.mocked(mockRepository.update).mockResolvedValue(updatedUser);
+
+      await userService.update(userId, dto);
+
+      expect(mockFileStorage.delete).not.toHaveBeenCalled();
+    });
+
+    it("should not throw when file deletion fails", async () => {
+      const userId = mockUser.id;
+      const newPhotoUrl = "test-uuid-new.jpg";
+      const dto: UpdateUserDTO = {
+        wantedJobTitle: "Senior Software Engineer",
+        firstName: "John",
+        lastName: "Doe",
+        email: "john.new@example.com",
+        phone: "+6281234567890",
+        country: "Indonesia",
+        city: "Jakarta",
+        address: "Jl. Merdeka 456",
+        postalCode: "12345",
+        drivingLicense: "DL123456",
+        nationality: "Indonesian",
+        placeOfBirth: "Jakarta",
+        dateOfBirth: new Date("1990-01-15"),
+        photoUrl: newPhotoUrl,
+      };
+
+      const updatedUser = {
+        ...mockUser,
+        photoUrl: newPhotoUrl,
+        skills: [],
+        educations: [],
+      };
+
+      vi.mocked(mockRepository.findById).mockResolvedValue(mockUser);
+      vi.mocked(mockRepository.findByEmail).mockResolvedValue(null);
+      vi.mocked(mockRepository.update).mockResolvedValue(updatedUser);
+      vi.mocked(mockFileStorage.delete).mockRejectedValue(new Error("File system error"));
+
+      const result = await userService.update(userId, dto);
+
+      expect(result).toBeDefined();
+      expect(mockFileStorage.delete).toHaveBeenCalled();
     });
   });
 
