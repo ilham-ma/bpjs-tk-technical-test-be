@@ -1,10 +1,26 @@
 {
   "compilerOptions": {
+    "target": "ES2023",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "target": "ES2023",
+    "lib": ["ES2023"],
+    "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "isolatedModules": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
     "ignoreDeprecations": "6.0"
-  }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "generated", "test"]
 }

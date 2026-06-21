@@ -4,12 +4,12 @@
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "dev": "tsx src/main.ts",
     "build": "tsc",
     "start": "node dist/main.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:prod": "prisma migrate deploy",
@@ -24,6 +24,7 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^26.0.0",
     "prisma": "^7.8.0",
+    "ts-node": "^10.9.2",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "vitest": "^4.1.9"
@@ -33,6 +34,7 @@
     "@prisma/client": "^7.8.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "express-validator": "^7.3.2",
     "helmet": "^8.2.0",
     "morgan": "^1.11.0"
