@@ -3,6 +3,7 @@ import { body, param, validationResult } from "express-validator";
 import { Request } from "express";
 import {
   createUserValidator,
+  updateUserValidator,
   idParamValidator,
   handleValidationError,
 } from "../../../../../src/infrastructure/modules/user/validators/userValidator";
@@ -23,6 +24,7 @@ describe("userValidator", () => {
     placeOfBirth: "Jakarta",
     dateOfBirth: "1990-01-15",
     photoUrl: "/photos/john.jpg",
+    skills: [{ name: "TypeScript", level: "Expert" }],
   };
 
   describe("createUserValidator", () => {
@@ -171,6 +173,95 @@ describe("userValidator", () => {
       expect(req.body.firstName).toBe("John");
       expect(req.body.lastName).toBe("Doe");
     });
+
+    it("should fail when skills is missing", async () => {
+      const req = {
+        body: { ...validUserData },
+      } as any;
+      delete req.body.skills;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const skillsError = errs.find((e) => e.path === "skills");
+      expect(skillsError?.msg).toContain("at least 1 item");
+    });
+
+    it("should fail when skills is empty array", async () => {
+      const req = {
+        body: { ...validUserData, skills: [] },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const skillsError = errs.find((e) => e.path === "skills");
+      expect(skillsError?.msg).toContain("at least 1 item");
+    });
+
+    it("should fail when skills[].level is invalid", async () => {
+      const req = {
+        body: {
+          ...validUserData,
+          skills: [{ name: "TypeScript", level: "InvalidLevel" }],
+        },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const levelError = errs.find((e) => e.path === "skills[0].level");
+      expect(levelError?.msg).toContain("Basic, Intermediate, Expert");
+    });
+
+    it("should fail when skills[].name exceeds 255 characters", async () => {
+      const req = {
+        body: {
+          ...validUserData,
+          skills: [{ name: "a".repeat(256), level: "Expert" }],
+        },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const nameError = errs.find((e) => e.path === "skills[0].name");
+      expect(nameError?.msg).toContain("255");
+    });
+
+    it("should pass with valid skills", async () => {
+      const validSkills = [
+        { name: "TypeScript", level: "Expert" },
+        { name: "React", level: "Intermediate" },
+        { name: "Node.js", level: "Basic" },
+      ];
+      const req = {
+        body: { ...validUserData, skills: validSkills },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(true);
+    });
   });
 
   describe("idParamValidator", () => {
@@ -199,6 +290,62 @@ describe("userValidator", () => {
       const errs = errors.array() as any[];
       const idError = errs.find((e) => e.path === "id");
       expect(idError?.msg).toContain("valid UUID");
+    });
+  });
+
+  describe("updateUserValidator", () => {
+    it("should pass with valid data and skills", async () => {
+      const req = { body: validUserData } as any;
+
+      for (const validator of updateUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(true);
+    });
+
+    it("should pass when skills is not provided", async () => {
+      const userData = { ...validUserData };
+      delete userData.skills;
+      const req = { body: userData } as any;
+
+      for (const validator of updateUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(true);
+    });
+
+    it("should fail when skills is empty array", async () => {
+      const req = {
+        body: { ...validUserData, skills: [] },
+      } as any;
+
+      for (const validator of updateUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const skillsError = errs.find((e) => e.path === "skills");
+      expect(skillsError?.msg).toContain("at least 1 item");
+    });
+
+    it("should pass with valid skills on update", async () => {
+      const validSkills = [{ name: "Python", level: "Basic" }];
+      const req = {
+        body: { ...validUserData, skills: validSkills },
+      } as any;
+
+      for (const validator of updateUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(true);
     });
   });
 

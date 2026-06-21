@@ -27,6 +27,7 @@ describe("UserController", () => {
     photoUrl: "/photos/john.jpg",
     createdAt: new Date(),
     updatedAt: new Date(),
+    skills: [],
   };
 
   beforeEach(() => {
@@ -56,6 +57,7 @@ describe("UserController", () => {
           placeOfBirth: "Jakarta",
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
+          skills: [{ name: "TypeScript", level: "Expert" }],
         },
       } as Request;
 
@@ -94,6 +96,7 @@ describe("UserController", () => {
           placeOfBirth: "Jakarta",
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
+          skills: [{ name: "TypeScript", level: "Expert" }],
         },
       } as Request;
 
@@ -132,6 +135,7 @@ describe("UserController", () => {
           placeOfBirth: "Jakarta",
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john-updated.jpg",
+          skills: [{ name: "React", level: "Intermediate" }],
         },
       } as any as Request;
 
@@ -175,6 +179,7 @@ describe("UserController", () => {
           placeOfBirth: "Jakarta",
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
+          skills: [{ name: "TypeScript", level: "Expert" }],
         },
       } as any as Request;
 
@@ -211,6 +216,7 @@ describe("UserController", () => {
           placeOfBirth: "Jakarta",
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
+          skills: [{ name: "TypeScript", level: "Expert" }],
         },
       } as any as Request;
 
