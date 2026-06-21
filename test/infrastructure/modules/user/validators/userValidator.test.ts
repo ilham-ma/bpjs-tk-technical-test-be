@@ -33,6 +33,16 @@ describe("userValidator", () => {
         endDate: "2022-06-15",
       },
     ],
+    employmentHistories: [
+      {
+        jobTitle: "Software Engineer",
+        employer: "Tech Corp",
+        startDate: "2022-07-01",
+        endDate: null,
+        city: "Jakarta",
+        description: "Developing backend systems",
+      },
+    ],
   };
 
   describe("createUserValidator", () => {

@@ -5,6 +5,7 @@ import { User } from "../../../domain/user/entities/User";
 import { IUserRepository } from "../../../domain/user/repositories/IUserRepository";
 import { ISkillRepository } from "../../../domain/skill/repositories/ISkillRepository";
 import { IEducationRepository } from "../../../domain/education/repositories/IEducationRepository";
+import { IEmploymentHistoryRepository } from "../../../domain/employment-history/repositories/IEmploymentHistoryRepository";
 import { IFileStorageService } from "../../../domain/profile/services/IFileStorageService";
 
 export class UserService {
@@ -12,6 +13,7 @@ export class UserService {
     private readonly userRepository: IUserRepository,
     private readonly skillRepository: ISkillRepository,
     private readonly educationRepository: IEducationRepository,
+    private readonly employmentHistoryRepository: IEmploymentHistoryRepository,
     private readonly fileStorage?: IFileStorageService,
   ) {}
 
@@ -21,16 +23,17 @@ export class UserService {
       throw new AppError("Email already registered", 409);
     }
 
-    const { skills, educations, ...userData } = dto;
+    const { skills, educations, employmentHistories, ...userData } = dto;
     const user = await this.userRepository.create(userData as any);
 
-    const userWithSkillsAndEducation = {
+    const userWithSkillsEducationAndEmploymentHistories = {
       ...user,
       skills: await this.skillRepository.replaceForUser(user.id, skills),
       educations: await this.educationRepository.replaceForUser(user.id, educations),
+      employmentHistories: await this.employmentHistoryRepository.replaceForUser(user.id, employmentHistories),
     };
 
-    return userWithSkillsAndEducation;
+    return userWithSkillsEducationAndEmploymentHistories;
   }
 
   async update(id: string, dto: UpdateUserDTO): Promise<User> {
@@ -52,11 +55,12 @@ export class UserService {
       }
     }
 
-    const { skills, educations, ...userData } = dto;
+    const { skills, educations, employmentHistories, ...userData } = dto;
     const updatedUser = await this.userRepository.update(id, userData as any);
 
     let resultSkills = existing.skills;
     let resultEducations = existing.educations;
+    let resultEmploymentHistories = existing.employmentHistories;
 
     if (skills !== undefined) {
       resultSkills = await this.skillRepository.replaceForUser(id, skills);
@@ -66,10 +70,15 @@ export class UserService {
       resultEducations = await this.educationRepository.replaceForUser(id, educations);
     }
 
+    if (employmentHistories !== undefined) {
+      resultEmploymentHistories = await this.employmentHistoryRepository.replaceForUser(id, employmentHistories);
+    }
+
     return {
       ...updatedUser,
       skills: resultSkills,
       educations: resultEducations,
+      employmentHistories: resultEmploymentHistories,
     };
   }
 

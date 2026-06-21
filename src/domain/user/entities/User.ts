@@ -1,5 +1,6 @@
 import { Skill } from '../../skill/entities/Skill';
 import { Education } from '../../education/entities/Education';
+import { EmploymentHistory } from '../../employment-history/entities/EmploymentHistory';
 
 export type User = {
   id: string;
@@ -21,4 +22,5 @@ export type User = {
   updatedAt: Date;
   skills: Skill[];
   educations: Education[];
+  employmentHistories: EmploymentHistory[];
 };
