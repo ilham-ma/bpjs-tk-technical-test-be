@@ -29,6 +29,7 @@ model User {
   placeOfBirth      String      @db.VarChar(25)
   dateOfBirth       DateTime    @db.Date
   photoUrl          String      @db.Text
+  professionalSummary String    @db.Text
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   skills            Skill[]
@@ -49,13 +50,15 @@ model Skill {
 }
 
 model Education {
-  id        String    @id @default(uuid()) @db.VarChar(36)
-  school    String    @db.VarChar(255)
-  degree    String    @db.VarChar(255)
-  startDate DateTime  @db.Date
-  endDate   DateTime? @db.Date
-  userId    String    @db.VarChar(36)
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String    @id @default(uuid()) @db.VarChar(36)
+  school      String    @db.VarChar(255)
+  degree      String    @db.VarChar(255)
+  startDate   DateTime  @db.Date
+  endDate     DateTime? @db.Date
+  city        String    @db.VarChar(255)
+  description String    @db.Text
+  userId      String    @db.VarChar(36)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("educations")
 }

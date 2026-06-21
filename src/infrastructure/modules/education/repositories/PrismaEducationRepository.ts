@@ -15,6 +15,8 @@ export class PrismaEducationRepository implements IEducationRepository {
           degree: education.degree,
           startDate: education.startDate,
           endDate: education.endDate || null,
+          city: education.city,
+          description: education.description,
           userId,
         })),
       }),

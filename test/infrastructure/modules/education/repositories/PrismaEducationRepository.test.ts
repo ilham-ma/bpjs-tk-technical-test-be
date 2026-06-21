@@ -28,6 +28,8 @@ describe("PrismaEducationRepository", () => {
       degree: "Bachelor of Computer Science",
       startDate: new Date("2018-09-01"),
       endDate: new Date("2022-06-15"),
+      city: "Bandung",
+      description: "Studied computer science fundamentals",
       userId,
     },
     {
@@ -36,6 +38,8 @@ describe("PrismaEducationRepository", () => {
       degree: "Master of Science",
       startDate: new Date("2022-09-01"),
       endDate: null,
+      city: "Jakarta",
+      description: "Currently pursuing master degree",
       userId,
     },
   ];
@@ -56,6 +60,8 @@ describe("PrismaEducationRepository", () => {
           degree: "Bachelor of Computer Science",
           startDate: new Date("2018-09-01"),
           endDate: new Date("2022-06-15"),
+          city: "Bandung",
+          description: "Studied computer science fundamentals",
         },
       ]);
 
@@ -71,12 +77,16 @@ describe("PrismaEducationRepository", () => {
           degree: "Bachelor of Computer Science",
           startDate: new Date("2018-09-01"),
           endDate: new Date("2022-06-15"),
+          city: "Bandung",
+          description: "Studied computer science fundamentals",
         },
         {
           school: "Advanced Institute",
           degree: "Master of Science",
           startDate: new Date("2022-09-01"),
           endDate: null,
+          city: "Jakarta",
+          description: "Currently pursuing master degree",
         },
       ];
 
@@ -91,6 +101,8 @@ describe("PrismaEducationRepository", () => {
             degree: "Bachelor of Computer Science",
             startDate: new Date("2018-09-01"),
             endDate: new Date("2022-06-15"),
+            city: "Bandung",
+            description: "Studied computer science fundamentals",
             userId,
           },
           {
@@ -98,6 +110,8 @@ describe("PrismaEducationRepository", () => {
             degree: "Master of Science",
             startDate: new Date("2022-09-01"),
             endDate: null,
+            city: "Jakarta",
+            description: "Currently pursuing master degree",
             userId,
           },
         ],
@@ -111,6 +125,8 @@ describe("PrismaEducationRepository", () => {
           degree: "Bachelor of Arts",
           startDate: new Date("2020-09-01"),
           endDate: new Date("2024-06-15"),
+          city: "Surabaya",
+          description: "Bachelor of Arts program",
         },
       ];
 
@@ -132,6 +148,8 @@ describe("PrismaEducationRepository", () => {
           degree: "Bachelor of Computer Science",
           startDate: new Date("2018-09-01"),
           endDate: new Date("2022-06-15"),
+          city: "Bandung",
+          description: "Studied computer science fundamentals",
         },
       ]);
 
@@ -165,6 +183,8 @@ describe("PrismaEducationRepository", () => {
           degree: "PhD in Mathematics",
           startDate: new Date("2022-09-01"),
           endDate: null,
+          city: "Jakarta",
+          description: "PhD program in mathematics",
         },
       ];
 
@@ -175,6 +195,8 @@ describe("PrismaEducationRepository", () => {
           degree: "PhD in Mathematics",
           startDate: new Date("2022-09-01"),
           endDate: null,
+          city: "Jakarta",
+          description: "PhD program in mathematics",
           userId,
         },
       ];
@@ -190,6 +212,8 @@ describe("PrismaEducationRepository", () => {
             degree: "PhD in Mathematics",
             startDate: new Date("2022-09-01"),
             endDate: null,
+            city: "Jakarta",
+            description: "PhD program in mathematics",
             userId,
           },
         ],
@@ -209,6 +233,8 @@ describe("PrismaEducationRepository", () => {
             degree: "Bachelor",
             startDate: new Date("2020-09-01"),
             endDate: new Date("2024-06-15"),
+            city: "Jakarta",
+            description: "Bachelor program",
           },
         ]),
       ).rejects.toThrow("Transaction failed");
@@ -227,6 +253,8 @@ describe("PrismaEducationRepository", () => {
             degree: "Bachelor",
             startDate: new Date("2020-09-01"),
             endDate: new Date("2024-06-15"),
+            city: "Jakarta",
+            description: "Bachelor program",
           },
         ]),
       ).rejects.toThrow("Database error");
@@ -270,6 +298,8 @@ describe("PrismaEducationRepository", () => {
           degree: "Master's Degree",
           startDate: new Date("2023-09-01"),
           endDate: null,
+          city: "Jakarta",
+          description: "Ongoing master degree",
           userId,
         },
       ];

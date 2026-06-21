@@ -34,6 +34,7 @@ describe("UserService", () => {
     placeOfBirth: "Jakarta",
     dateOfBirth: new Date("1990-01-15"),
     photoUrl: "/photos/john.jpg",
+    professionalSummary: "Experienced backend engineer",
     createdAt: new Date(),
     updatedAt: new Date(),
     skills: [],
@@ -87,6 +88,7 @@ describe("UserService", () => {
         placeOfBirth: "Jakarta",
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: "/photos/john.jpg",
+        professionalSummary: "Experienced backend engineer",
         skills: [{ name: "TypeScript", level: "Expert" }],
         educations: [
           {
@@ -94,6 +96,8 @@ describe("UserService", () => {
             degree: "Bachelor of Computer Science",
             startDate: new Date("2018-09-01"),
             endDate: new Date("2022-06-15"),
+            city: "Bandung",
+            description: "Studied computer science fundamentals",
           },
         ],
         employmentHistories: [
@@ -174,6 +178,7 @@ describe("UserService", () => {
         placeOfBirth: "Jakarta",
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: "/photos/jane.jpg",
+        professionalSummary: "Backend engineer with 5 years experience",
         skills: [{ name: "Java", level: "Intermediate" }],
         educations: [
           {
@@ -181,6 +186,8 @@ describe("UserService", () => {
             degree: "Master of Science",
             startDate: new Date("2020-09-01"),
             endDate: new Date("2022-06-15"),
+            city: "Surabaya",
+            description: "Specialized in distributed systems",
           },
         ],
         employmentHistories: [
@@ -218,6 +225,8 @@ describe("UserService", () => {
           degree: "Master of Science",
           startDate: new Date("2022-09-01"),
           endDate: null,
+          city: "Jakarta",
+          description: "Currently pursuing master degree",
         },
       ];
       const employmentHistories = [
@@ -365,6 +374,7 @@ describe("UserService", () => {
         placeOfBirth: "Jakarta",
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: "/photos/john.jpg",
+        professionalSummary: "Experienced backend engineer",
         skills: [{ name: "TypeScript", level: "Expert" }],
         educations: [
           {
@@ -372,6 +382,8 @@ describe("UserService", () => {
             degree: "Bachelor",
             startDate: new Date("2018-09-01"),
             endDate: new Date("2022-06-15"),
+            city: "Jakarta",
+            description: "Bachelor program",
           },
         ],
         employmentHistories: [
@@ -415,6 +427,7 @@ describe("UserService", () => {
         placeOfBirth: "Jakarta",
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: "/photos/john-updated.jpg",
+        professionalSummary: "Senior backend engineer leading distributed teams",
         skills: [{ name: "React", level: "Intermediate" }],
         educations: [
           {
@@ -422,6 +435,8 @@ describe("UserService", () => {
             degree: "Bachelor",
             startDate: new Date("2018-09-01"),
             endDate: new Date("2022-06-15"),
+            city: "Bandung",
+            description: "Bachelor program",
           },
         ],
         employmentHistories: [
@@ -519,6 +534,7 @@ describe("UserService", () => {
         placeOfBirth: "Jakarta",
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: newPhotoUrl,
+        professionalSummary: "Senior backend engineer",
       };
 
       const updatedUser = {
@@ -556,6 +572,7 @@ describe("UserService", () => {
         placeOfBirth: "Jakarta",
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: mockUser.photoUrl,
+        professionalSummary: "Senior backend engineer",
       };
 
       const updatedUser = {
@@ -590,6 +607,7 @@ describe("UserService", () => {
         nationality: "Indonesian",
         placeOfBirth: "Jakarta",
         dateOfBirth: new Date("1990-01-15"),
+        professionalSummary: "Senior backend engineer",
       };
 
       const updatedUser = {
@@ -626,6 +644,7 @@ describe("UserService", () => {
         placeOfBirth: "Jakarta",
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: newPhotoUrl,
+        professionalSummary: "Senior backend engineer",
       };
 
       const updatedUser = {

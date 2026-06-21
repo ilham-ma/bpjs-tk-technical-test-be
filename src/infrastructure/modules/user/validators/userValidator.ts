@@ -82,6 +82,18 @@ const educationsValidatorRequired: ValidationChain[] = [
       }
       return true;
     }),
+  body("educations.*.city")
+    .notEmpty()
+    .withMessage("educations[].city is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("educations[].city must not exceed 255 characters"),
+  body("educations.*.description")
+    .notEmpty()
+    .withMessage("educations[].description is required")
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage("educations[].description cannot be empty"),
 ];
 
 const educationsValidatorOptional: ValidationChain[] = [
@@ -130,6 +142,20 @@ const educationsValidatorOptional: ValidationChain[] = [
       }
       return true;
     }),
+  body("educations.*.city")
+    .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage("educations[].city is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("educations[].city must not exceed 255 characters"),
+  body("educations.*.description")
+    .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage("educations[].description is required")
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage("educations[].description cannot be empty"),
 ];
 
 const employmentHistoriesValidatorRequired: ValidationChain[] = [
@@ -346,6 +372,12 @@ export const createUserValidator: ValidationChain[] = [
     .trim()
     .isLength({ min: 1 })
     .withMessage("photoUrl cannot be empty"),
+  body("professionalSummary")
+    .notEmpty()
+    .withMessage("professionalSummary is required")
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage("professionalSummary cannot be empty"),
   ...skillsValidatorRequired,
   ...educationsValidatorRequired,
   ...employmentHistoriesValidatorRequired,
@@ -446,6 +478,12 @@ export const updateUserValidator: ValidationChain[] = [
     .trim()
     .isLength({ min: 1 })
     .withMessage("photoUrl cannot be empty"),
+  body("professionalSummary")
+    .notEmpty()
+    .withMessage("professionalSummary is required")
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage("professionalSummary cannot be empty"),
   ...skillsValidatorOptional,
   ...educationsValidatorOptional,
   ...employmentHistoriesValidatorOptional,

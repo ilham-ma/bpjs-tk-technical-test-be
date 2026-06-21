@@ -18,6 +18,7 @@ export type User = {
   placeOfBirth: string;
   dateOfBirth: Date;
   photoUrl: string;
+  professionalSummary: string;
   createdAt: Date;
   updatedAt: Date;
   skills: Skill[];

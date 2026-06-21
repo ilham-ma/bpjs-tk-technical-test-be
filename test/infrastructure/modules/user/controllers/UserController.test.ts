@@ -25,6 +25,7 @@ describe("UserController", () => {
     placeOfBirth: "Jakarta",
     dateOfBirth: new Date("1990-01-15"),
     photoUrl: "/photos/john.jpg",
+    professionalSummary: "Experienced backend engineer",
     createdAt: new Date(),
     updatedAt: new Date(),
     skills: [],
@@ -59,6 +60,7 @@ describe("UserController", () => {
           placeOfBirth: "Jakarta",
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
+          professionalSummary: "Experienced backend engineer",
           skills: [{ name: "TypeScript", level: "Expert" }],
           educations: [
             {
@@ -66,6 +68,8 @@ describe("UserController", () => {
               degree: "Bachelor of Computer Science",
               startDate: "2018-09-01",
               endDate: "2022-06-15",
+              city: "Bandung",
+              description: "Studied computer science fundamentals",
             },
           ],
         },
@@ -106,6 +110,7 @@ describe("UserController", () => {
           placeOfBirth: "Jakarta",
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
+          professionalSummary: "Experienced backend engineer",
           skills: [{ name: "TypeScript", level: "Expert" }],
           educations: [
             {
@@ -113,6 +118,8 @@ describe("UserController", () => {
               degree: "Bachelor of Computer Science",
               startDate: "2018-09-01",
               endDate: "2022-06-15",
+              city: "Bandung",
+              description: "Studied computer science fundamentals",
             },
           ],
         },
@@ -153,6 +160,7 @@ describe("UserController", () => {
           placeOfBirth: "Jakarta",
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john-updated.jpg",
+          professionalSummary: "Senior backend engineer",
           skills: [{ name: "React", level: "Intermediate" }],
           educations: [
             {
@@ -160,6 +168,8 @@ describe("UserController", () => {
               degree: "Master of Science",
               startDate: "2022-09-01",
               endDate: null,
+              city: "Jakarta",
+              description: "Currently pursuing master degree",
             },
           ],
         },
@@ -205,6 +215,7 @@ describe("UserController", () => {
           placeOfBirth: "Jakarta",
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
+          professionalSummary: "Experienced backend engineer",
           skills: [{ name: "TypeScript", level: "Expert" }],
           educations: [
             {
@@ -212,6 +223,8 @@ describe("UserController", () => {
               degree: "Bachelor of Computer Science",
               startDate: "2018-09-01",
               endDate: "2022-06-15",
+              city: "Bandung",
+              description: "Studied computer science fundamentals",
             },
           ],
         },
@@ -250,6 +263,7 @@ describe("UserController", () => {
           placeOfBirth: "Jakarta",
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
+          professionalSummary: "Experienced backend engineer",
           skills: [{ name: "TypeScript", level: "Expert" }],
           educations: [
             {
@@ -257,6 +271,8 @@ describe("UserController", () => {
               degree: "Bachelor of Computer Science",
               startDate: "2018-09-01",
               endDate: "2022-06-15",
+              city: "Bandung",
+              description: "Studied computer science fundamentals",
             },
           ],
         },
@@ -399,7 +415,7 @@ describe("UserController", () => {
         ...mockUser,
         id: "id-1",
         skills: [{ id: "skill-1", name: "TypeScript", level: "Expert", userId: "id-1" }],
-        educations: [{ id: "edu-1", school: "MIT", degree: "BS", startDate: new Date(), endDate: new Date(), userId: "id-1" }],
+        educations: [{ id: "edu-1", school: "MIT", degree: "BS", startDate: new Date(), endDate: new Date(), city: "Cambridge", description: "BS program", userId: "id-1" }],
         employmentHistories: [{ id: "emp-1", jobTitle: "Engineer", employer: "Company", startDate: new Date(), endDate: null, city: "NYC", description: "Work", userId: "id-1" }],
       };
       const user2 = {

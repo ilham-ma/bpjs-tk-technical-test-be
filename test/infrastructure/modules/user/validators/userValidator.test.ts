@@ -24,6 +24,7 @@ describe("userValidator", () => {
     placeOfBirth: "Jakarta",
     dateOfBirth: "1990-01-15",
     photoUrl: "/photos/john.jpg",
+    professionalSummary: "Experienced backend engineer",
     skills: [{ name: "TypeScript", level: "Expert" }],
     educations: [
       {
@@ -31,6 +32,8 @@ describe("userValidator", () => {
         degree: "Bachelor of Computer Science",
         startDate: "2018-09-01",
         endDate: "2022-06-15",
+        city: "Bandung",
+        description: "Studied computer science fundamentals",
       },
     ],
     employmentHistories: [
@@ -324,6 +327,8 @@ describe("userValidator", () => {
               degree: "Bachelor",
               startDate: "2018-09-01",
               endDate: "2022-06-15",
+              city: "Jakarta",
+              description: "Bachelor program",
             },
           ],
         },
@@ -354,6 +359,8 @@ describe("userValidator", () => {
               degree: "Bachelor",
               startDate: futureDateString,
               endDate: "2022-06-15",
+              city: "Jakarta",
+              description: "Bachelor program",
             },
           ],
         },
@@ -380,6 +387,8 @@ describe("userValidator", () => {
               degree: "Bachelor",
               startDate: "2022-06-15",
               endDate: "2018-09-01",
+              city: "Jakarta",
+              description: "Bachelor program",
             },
           ],
         },
@@ -406,6 +415,8 @@ describe("userValidator", () => {
               degree: "Master",
               startDate: "2022-09-01",
               endDate: null,
+              city: "Jakarta",
+              description: "Master program",
             },
           ],
         },
@@ -426,12 +437,16 @@ describe("userValidator", () => {
           degree: "Bachelor of Science",
           startDate: "2018-09-01",
           endDate: "2022-06-15",
+          city: "Jakarta",
+          description: "Bachelor of Science program",
         },
         {
           school: "Advanced Institute",
           degree: "Master of Science",
           startDate: "2022-09-01",
           endDate: null,
+          city: "Bandung",
+          description: "Master of Science program",
         },
       ];
       const req = {
@@ -567,6 +582,8 @@ describe("userValidator", () => {
           degree: "Master",
           startDate: "2020-09-01",
           endDate: null,
+          city: "Jakarta",
+          description: "Master degree program",
         },
       ];
       const req = {

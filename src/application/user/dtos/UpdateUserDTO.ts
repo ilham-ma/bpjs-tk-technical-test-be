@@ -17,6 +17,7 @@ export type UpdateUserDTO = {
   placeOfBirth: string;
   dateOfBirth: Date;
   photoUrl: string;
+  professionalSummary: string;
   skills?: SkillInputDTO[];
   educations?: EducationInputDTO[];
   employmentHistories?: EmploymentHistoryInputDTO[];
