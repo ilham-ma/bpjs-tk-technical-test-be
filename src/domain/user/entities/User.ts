@@ -1,3 +1,5 @@
+import { Skill } from '../../skill/entities/Skill';
+
 export type User = {
   id: string;
   wantedJobTitle: string;
@@ -16,4 +18,5 @@ export type User = {
   photoUrl: string;
   createdAt: Date;
   updatedAt: Date;
+  skills: Skill[];
 };

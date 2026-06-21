@@ -7,6 +7,12 @@ datasource db {
   provider = "mysql"
 }
 
+enum SkillLevel {
+  Basic
+  Intermediate
+  Expert
+}
+
 model User {
   id                String   @id @default(uuid()) @db.VarChar(36)
   wantedJobTitle    String   @db.VarChar(255)
@@ -25,6 +31,17 @@ model User {
   photoUrl          String   @db.Text
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+  skills            Skill[]
 
   @@map("users")
+}
+
+model Skill {
+  id     String     @id @default(uuid()) @db.VarChar(36)
+  name   String     @db.VarChar(255)
+  level  SkillLevel
+  userId String     @db.VarChar(36)
+  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("skills")
 }
