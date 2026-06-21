@@ -34,6 +34,7 @@ describe("PrismaUserRepository", () => {
     placeOfBirth: "Jakarta",
     dateOfBirth: new Date("1990-01-15"),
     photoUrl: "/photos/john.jpg",
+    professionalSummary: "Experienced backend engineer",
     createdAt: new Date(),
     updatedAt: new Date(),
     skills: [],
@@ -110,6 +111,7 @@ describe("PrismaUserRepository", () => {
         placeOfBirth: mockUser.placeOfBirth,
         dateOfBirth: mockUser.dateOfBirth,
         photoUrl: mockUser.photoUrl,
+        professionalSummary: mockUser.professionalSummary,
       };
 
       vi.mocked(prisma.user.create).mockResolvedValue(mockUser);
@@ -140,6 +142,7 @@ describe("PrismaUserRepository", () => {
         placeOfBirth: mockUser.placeOfBirth,
         dateOfBirth: mockUser.dateOfBirth,
         photoUrl: mockUser.photoUrl,
+        professionalSummary: mockUser.professionalSummary,
       };
 
       const updatedUser = { ...mockUser, wantedJobTitle: "Senior Software Engineer" };
