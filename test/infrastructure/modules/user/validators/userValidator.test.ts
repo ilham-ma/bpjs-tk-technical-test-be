@@ -25,6 +25,14 @@ describe("userValidator", () => {
     dateOfBirth: "1990-01-15",
     photoUrl: "/photos/john.jpg",
     skills: [{ name: "TypeScript", level: "Expert" }],
+    educations: [
+      {
+        school: "University of Technology",
+        degree: "Bachelor of Computer Science",
+        startDate: "2018-09-01",
+        endDate: "2022-06-15",
+      },
+    ],
   };
 
   describe("createUserValidator", () => {
@@ -262,6 +270,171 @@ describe("userValidator", () => {
       const errors = validationResult(req);
       expect(errors.isEmpty()).toBe(true);
     });
+
+    it("should fail when educations is missing", async () => {
+      const req = {
+        body: { ...validUserData },
+      } as any;
+      delete req.body.educations;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const educationsError = errs.find((e) => e.path === "educations");
+      expect(educationsError?.msg).toContain("at least 1 item");
+    });
+
+    it("should fail when educations is empty array", async () => {
+      const req = {
+        body: { ...validUserData, educations: [] },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const educationsError = errs.find((e) => e.path === "educations");
+      expect(educationsError?.msg).toContain("at least 1 item");
+    });
+
+    it("should fail when educations[].school exceeds 255 characters", async () => {
+      const req = {
+        body: {
+          ...validUserData,
+          educations: [
+            {
+              school: "a".repeat(256),
+              degree: "Bachelor",
+              startDate: "2018-09-01",
+              endDate: "2022-06-15",
+            },
+          ],
+        },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const schoolError = errs.find((e) => e.path === "educations[0].school");
+      expect(schoolError?.msg).toContain("255");
+    });
+
+    it("should fail when educations[].startDate is in the future", async () => {
+      const futureDate = new Date();
+      futureDate.setFullYear(futureDate.getFullYear() + 1);
+      const futureDateString = futureDate.toISOString().split("T")[0];
+
+      const req = {
+        body: {
+          ...validUserData,
+          educations: [
+            {
+              school: "University",
+              degree: "Bachelor",
+              startDate: futureDateString,
+              endDate: "2022-06-15",
+            },
+          ],
+        },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const startDateError = errs.find((e) => e.path === "educations[0].startDate");
+      expect(startDateError?.msg).toContain("future");
+    });
+
+    it("should fail when educations[].endDate is before startDate", async () => {
+      const req = {
+        body: {
+          ...validUserData,
+          educations: [
+            {
+              school: "University",
+              degree: "Bachelor",
+              startDate: "2022-06-15",
+              endDate: "2018-09-01",
+            },
+          ],
+        },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const endDateError = errs.find((e) => e.path === "educations[0].endDate");
+      expect(endDateError?.msg).toContain("greater than or equal to startDate");
+    });
+
+    it("should pass with null endDate", async () => {
+      const req = {
+        body: {
+          ...validUserData,
+          educations: [
+            {
+              school: "Current University",
+              degree: "Master",
+              startDate: "2022-09-01",
+              endDate: null,
+            },
+          ],
+        },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(true);
+    });
+
+    it("should pass with valid educations", async () => {
+      const validEducations = [
+        {
+          school: "State University",
+          degree: "Bachelor of Science",
+          startDate: "2018-09-01",
+          endDate: "2022-06-15",
+        },
+        {
+          school: "Advanced Institute",
+          degree: "Master of Science",
+          startDate: "2022-09-01",
+          endDate: null,
+        },
+      ];
+      const req = {
+        body: { ...validUserData, educations: validEducations },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(true);
+    });
   });
 
   describe("idParamValidator", () => {
@@ -338,6 +511,56 @@ describe("userValidator", () => {
       const validSkills = [{ name: "Python", level: "Basic" }];
       const req = {
         body: { ...validUserData, skills: validSkills },
+      } as any;
+
+      for (const validator of updateUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(true);
+    });
+
+    it("should pass when educations is not provided on update", async () => {
+      const userData = { ...validUserData };
+      delete userData.educations;
+      const req = { body: userData } as any;
+
+      for (const validator of updateUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(true);
+    });
+
+    it("should fail when educations is empty array on update", async () => {
+      const req = {
+        body: { ...validUserData, educations: [] },
+      } as any;
+
+      for (const validator of updateUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const educationsError = errs.find((e) => e.path === "educations");
+      expect(educationsError?.msg).toContain("at least 1 item");
+    });
+
+    it("should pass with valid educations on update", async () => {
+      const validEducations = [
+        {
+          school: "Updated University",
+          degree: "Master",
+          startDate: "2020-09-01",
+          endDate: null,
+        },
+      ];
+      const req = {
+        body: { ...validUserData, educations: validEducations },
       } as any;
 
       for (const validator of updateUserValidator) {

@@ -36,6 +36,7 @@ describe("PrismaUserRepository", () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     skills: [],
+    educations: [],
   };
 
   beforeEach(() => {
@@ -48,7 +49,7 @@ describe("PrismaUserRepository", () => {
   });
 
   describe("findById", () => {
-    it("should return user when found with skills included", async () => {
+    it("should return user when found with skills and educations included", async () => {
       vi.mocked(prisma.user.findUnique).mockResolvedValue(mockUser);
 
       const result = await repository.findById(mockUser.id);
@@ -56,7 +57,7 @@ describe("PrismaUserRepository", () => {
       expect(result).toEqual(mockUser);
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: mockUser.id },
-        include: { skills: true },
+        include: { skills: true, educations: true },
       });
     });
 

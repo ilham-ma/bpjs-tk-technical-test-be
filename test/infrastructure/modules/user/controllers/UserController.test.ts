@@ -28,6 +28,7 @@ describe("UserController", () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     skills: [],
+    educations: [],
   };
 
   beforeEach(() => {
@@ -58,6 +59,14 @@ describe("UserController", () => {
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
           skills: [{ name: "TypeScript", level: "Expert" }],
+          educations: [
+            {
+              school: "University of Technology",
+              degree: "Bachelor of Computer Science",
+              startDate: "2018-09-01",
+              endDate: "2022-06-15",
+            },
+          ],
         },
       } as Request;
 
@@ -97,6 +106,14 @@ describe("UserController", () => {
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
           skills: [{ name: "TypeScript", level: "Expert" }],
+          educations: [
+            {
+              school: "University of Technology",
+              degree: "Bachelor of Computer Science",
+              startDate: "2018-09-01",
+              endDate: "2022-06-15",
+            },
+          ],
         },
       } as Request;
 
@@ -136,6 +153,14 @@ describe("UserController", () => {
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john-updated.jpg",
           skills: [{ name: "React", level: "Intermediate" }],
+          educations: [
+            {
+              school: "Advanced Institute",
+              degree: "Master of Science",
+              startDate: "2022-09-01",
+              endDate: null,
+            },
+          ],
         },
       } as any as Request;
 
@@ -180,6 +205,14 @@ describe("UserController", () => {
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
           skills: [{ name: "TypeScript", level: "Expert" }],
+          educations: [
+            {
+              school: "University of Technology",
+              degree: "Bachelor of Computer Science",
+              startDate: "2018-09-01",
+              endDate: "2022-06-15",
+            },
+          ],
         },
       } as any as Request;
 
@@ -217,6 +250,14 @@ describe("UserController", () => {
           dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
           skills: [{ name: "TypeScript", level: "Expert" }],
+          educations: [
+            {
+              school: "University of Technology",
+              degree: "Bachelor of Computer Science",
+              startDate: "2018-09-01",
+              endDate: "2022-06-15",
+            },
+          ],
         },
       } as any as Request;
 
