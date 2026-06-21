@@ -7,6 +7,7 @@ vi.mock("../../../../../src/infrastructure/database/prisma/client", () => ({
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      findMany: vi.fn(),
     },
   },
 }));
@@ -151,6 +152,57 @@ describe("PrismaUserRepository", () => {
         where: { id: mockUser.id },
         data: updateData,
       });
+    });
+  });
+
+  describe("findAll", () => {
+    it("should return array of users with relations included", async () => {
+      const users = [mockUser];
+      vi.mocked(prisma.user.findMany).mockResolvedValue(users);
+
+      const result = await repository.findAll();
+
+      expect(result).toEqual(users);
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        include: { skills: true, educations: true, employmentHistories: true },
+        orderBy: { createdAt: 'desc' },
+      });
+    });
+
+    it("should return empty array when no users exist", async () => {
+      vi.mocked(prisma.user.findMany).mockResolvedValue([]);
+
+      const result = await repository.findAll();
+
+      expect(result).toEqual([]);
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        include: { skills: true, educations: true, employmentHistories: true },
+        orderBy: { createdAt: 'desc' },
+      });
+    });
+
+    it("should return multiple users ordered by createdAt descending", async () => {
+      const user1 = { ...mockUser, id: "id-1", createdAt: new Date("2024-01-15") };
+      const user2 = { ...mockUser, id: "id-2", createdAt: new Date("2024-01-10") };
+      const users = [user1, user2];
+      vi.mocked(prisma.user.findMany).mockResolvedValue(users);
+
+      const result = await repository.findAll();
+
+      expect(result).toEqual(users);
+      expect(result).toHaveLength(2);
+    });
+
+    it("should propagate error from prisma", async () => {
+      const error = new Error("Database connection failed");
+      vi.mocked(prisma.user.findMany).mockRejectedValue(error);
+
+      try {
+        await repository.findAll();
+        expect.fail("Should have thrown error");
+      } catch (err) {
+        expect(err).toBe(error);
+      }
     });
   });
 });

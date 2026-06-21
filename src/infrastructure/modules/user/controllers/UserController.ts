@@ -83,4 +83,16 @@ export class UserController {
       next(err);
     }
   };
+
+  findAll = async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const users = await this.userService.findAll();
+      res.status(200).json({
+        status: "success",
+        data: users,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

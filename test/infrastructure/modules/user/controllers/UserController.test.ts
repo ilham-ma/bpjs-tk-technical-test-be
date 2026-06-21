@@ -36,6 +36,7 @@ describe("UserController", () => {
       create: vi.fn(),
       update: vi.fn(),
       findById: vi.fn(),
+      findAll: vi.fn(),
     } as any;
     userController = new UserController(mockUserService);
   });
@@ -317,6 +318,123 @@ describe("UserController", () => {
       vi.mocked(mockUserService.findById).mockRejectedValue(error);
 
       await userController.findById(req, res, next);
+
+      expect(next).toHaveBeenCalledWith(error);
+    });
+  });
+
+  describe("findAll", () => {
+    it("should return 200 with array of users", async () => {
+      const req = {} as any as Request;
+
+      const res = {
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
+      } as any as Response;
+
+      const next = vi.fn() as NextFunction;
+
+      const users = [mockUser];
+      vi.mocked(mockUserService.findAll).mockResolvedValue(users);
+
+      await userController.findAll(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        status: "success",
+        data: users,
+      });
+    });
+
+    it("should return 200 with empty array when no users exist", async () => {
+      const req = {} as any as Request;
+
+      const res = {
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
+      } as any as Response;
+
+      const next = vi.fn() as NextFunction;
+
+      vi.mocked(mockUserService.findAll).mockResolvedValue([]);
+
+      await userController.findAll(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        status: "success",
+        data: [],
+      });
+    });
+
+    it("should call userService.findAll", async () => {
+      const req = {} as any as Request;
+
+      const res = {
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
+      } as any as Response;
+
+      const next = vi.fn() as NextFunction;
+
+      const users = [mockUser];
+      vi.mocked(mockUserService.findAll).mockResolvedValue(users);
+
+      await userController.findAll(req, res, next);
+
+      expect(mockUserService.findAll).toHaveBeenCalled();
+    });
+
+    it("should return multiple users with relations", async () => {
+      const req = {} as any as Request;
+
+      const res = {
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
+      } as any as Response;
+
+      const next = vi.fn() as NextFunction;
+
+      const user1 = {
+        ...mockUser,
+        id: "id-1",
+        skills: [{ id: "skill-1", name: "TypeScript", level: "Expert", userId: "id-1" }],
+        educations: [{ id: "edu-1", school: "MIT", degree: "BS", startDate: new Date(), endDate: new Date(), userId: "id-1" }],
+        employmentHistories: [{ id: "emp-1", jobTitle: "Engineer", employer: "Company", startDate: new Date(), endDate: null, city: "NYC", description: "Work", userId: "id-1" }],
+      };
+      const user2 = {
+        ...mockUser,
+        id: "id-2",
+        skills: [],
+        educations: [],
+        employmentHistories: [],
+      };
+      const users = [user1, user2];
+      vi.mocked(mockUserService.findAll).mockResolvedValue(users);
+
+      await userController.findAll(req, res, next);
+
+      const callArgs = vi.mocked(res.json).mock.calls[0][0];
+      expect(callArgs.data).toHaveLength(2);
+      expect(callArgs.data[0].skills).toHaveLength(1);
+      expect(callArgs.data[0].educations).toHaveLength(1);
+      expect(callArgs.data[0].employmentHistories).toHaveLength(1);
+    });
+
+    it("should pass error to next middleware on service error", async () => {
+      const req = {} as any as Request;
+
+      const res = {
+        status: vi.fn().mockReturnThis(),
+        json: vi.fn(),
+      } as any as Response;
+
+      const next = vi.fn() as NextFunction;
+
+      const error = new Error("Database error");
+      vi.mocked(mockUserService.findAll).mockRejectedValue(error);
+
+      await userController.findAll(req, res, next);
 
       expect(next).toHaveBeenCalledWith(error);
     });

@@ -42,4 +42,11 @@ export class PrismaUserRepository implements IUserRepository {
       employmentHistories: [],
     };
   }
+
+  async findAll(): Promise<User[]> {
+    return await prisma.user.findMany({
+      include: { skills: true, educations: true, employmentHistories: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

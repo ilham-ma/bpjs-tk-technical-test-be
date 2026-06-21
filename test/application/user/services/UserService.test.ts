@@ -47,6 +47,7 @@ describe("UserService", () => {
       findByEmail: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      findAll: vi.fn(),
     };
     mockSkillRepository = {
       replaceForUser: vi.fn(),
@@ -669,6 +670,39 @@ describe("UserService", () => {
         expect(err).toBeInstanceOf(AppError);
         expect((err as AppError).message).toBe("User not found");
         expect((err as AppError).statusCode).toBe(404);
+      }
+    });
+  });
+
+  describe("findAll", () => {
+    it("should call userRepository.findAll and return result", async () => {
+      const users = [mockUser];
+      vi.mocked(mockRepository.findAll).mockResolvedValue(users);
+
+      const result = await userService.findAll();
+
+      expect(result).toEqual(users);
+      expect(mockRepository.findAll).toHaveBeenCalled();
+    });
+
+    it("should return empty array when no users exist", async () => {
+      vi.mocked(mockRepository.findAll).mockResolvedValue([]);
+
+      const result = await userService.findAll();
+
+      expect(result).toEqual([]);
+      expect(mockRepository.findAll).toHaveBeenCalled();
+    });
+
+    it("should propagate error from repository", async () => {
+      const error = new Error("Database error");
+      vi.mocked(mockRepository.findAll).mockRejectedValue(error);
+
+      try {
+        await userService.findAll();
+        expect.fail("Should have thrown error");
+      } catch (err) {
+        expect(err).toBe(error);
       }
     });
   });
