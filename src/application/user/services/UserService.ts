@@ -5,12 +5,14 @@ import { User } from "../../../domain/user/entities/User";
 import { IUserRepository } from "../../../domain/user/repositories/IUserRepository";
 import { ISkillRepository } from "../../../domain/skill/repositories/ISkillRepository";
 import { IEducationRepository } from "../../../domain/education/repositories/IEducationRepository";
+import { IFileStorageService } from "../../../domain/profile/services/IFileStorageService";
 
 export class UserService {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly skillRepository: ISkillRepository,
     private readonly educationRepository: IEducationRepository,
+    private readonly fileStorage?: IFileStorageService,
   ) {}
 
   async create(dto: CreateUserDTO): Promise<User> {
@@ -41,6 +43,12 @@ export class UserService {
       const existingByEmail = await this.userRepository.findByEmail(dto.email);
       if (existingByEmail) {
         throw new AppError("Email already registered", 409);
+      }
+    }
+
+    if (dto.photoUrl !== undefined && existing.photoUrl && existing.photoUrl !== dto.photoUrl) {
+      if (this.fileStorage) {
+        await this.fileStorage.delete(existing.photoUrl).catch(() => {});
       }
     }
 

@@ -24,6 +24,7 @@ export class UserController {
         dateOfBirth: new Date(req.body.dateOfBirth),
         photoUrl: req.body.photoUrl,
         skills: req.body.skills || [],
+        educations: req.body.educations || [],
       };
 
       const user = await this.userService.create(dto);
@@ -55,6 +56,7 @@ export class UserController {
         dateOfBirth: new Date(req.body.dateOfBirth),
         photoUrl: req.body.photoUrl,
         ...(req.body.skills !== undefined && { skills: req.body.skills }),
+        ...(req.body.educations !== undefined && { educations: req.body.educations }),
       };
 
       const user = await this.userService.update(id, dto);

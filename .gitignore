@@ -4,8 +4,7 @@ node_modules
 
 /generated/prisma
 
-/generated/prisma
-
-/generated/prisma
-
 /dist
+
+/upload/*
+!/.gitkeep
