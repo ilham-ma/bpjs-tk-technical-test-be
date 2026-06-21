@@ -132,6 +132,125 @@ const educationsValidatorOptional: ValidationChain[] = [
     }),
 ];
 
+const employmentHistoriesValidatorRequired: ValidationChain[] = [
+  body("employmentHistories")
+    .isArray({ min: 1 })
+    .withMessage("employmentHistories must contain at least 1 item"),
+  body("employmentHistories.*.jobTitle")
+    .notEmpty()
+    .withMessage("employmentHistories[].jobTitle is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("employmentHistories[].jobTitle must not exceed 255 characters"),
+  body("employmentHistories.*.employer")
+    .notEmpty()
+    .withMessage("employmentHistories[].employer is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("employmentHistories[].employer must not exceed 255 characters"),
+  body("employmentHistories.*.startDate")
+    .notEmpty()
+    .withMessage("employmentHistories[].startDate is required")
+    .isISO8601({ strict: true })
+    .withMessage("employmentHistories[].startDate must be a valid ISO 8601 date")
+    .custom((value) => {
+      const date = new Date(value);
+      if (date > new Date()) {
+        throw new Error("employmentHistories[].startDate must not be in the future");
+      }
+      return true;
+    }),
+  body("employmentHistories.*.endDate")
+    .optional({ checkFalsy: true })
+    .isISO8601({ strict: true })
+    .withMessage("employmentHistories[].endDate must be a valid ISO 8601 date")
+    .custom((value, { req }) => {
+      if (!value) return true;
+      const endDate = new Date(value);
+      const startDate = new Date((req.body.employmentHistories as any[])?.[
+        (req.body.employmentHistories as any[]).findIndex(e => e.endDate === value)
+      ]?.startDate);
+      if (endDate < startDate) {
+        throw new Error("employmentHistories[].endDate must be greater than or equal to startDate");
+      }
+      return true;
+    }),
+  body("employmentHistories.*.city")
+    .notEmpty()
+    .withMessage("employmentHistories[].city is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("employmentHistories[].city must not exceed 255 characters"),
+  body("employmentHistories.*.description")
+    .notEmpty()
+    .withMessage("employmentHistories[].description is required")
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage("employmentHistories[].description cannot be empty"),
+];
+
+const employmentHistoriesValidatorOptional: ValidationChain[] = [
+  body("employmentHistories")
+    .optional()
+    .isArray({ min: 1 })
+    .withMessage("employmentHistories must contain at least 1 item"),
+  body("employmentHistories.*.jobTitle")
+    .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage("employmentHistories[].jobTitle is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("employmentHistories[].jobTitle must not exceed 255 characters"),
+  body("employmentHistories.*.employer")
+    .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage("employmentHistories[].employer is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("employmentHistories[].employer must not exceed 255 characters"),
+  body("employmentHistories.*.startDate")
+    .optional({ checkFalsy: true })
+    .isISO8601({ strict: true })
+    .withMessage("employmentHistories[].startDate must be a valid ISO 8601 date")
+    .custom((value) => {
+      if (!value) return true;
+      const date = new Date(value);
+      if (date > new Date()) {
+        throw new Error("employmentHistories[].startDate must not be in the future");
+      }
+      return true;
+    }),
+  body("employmentHistories.*.endDate")
+    .optional({ checkFalsy: true })
+    .isISO8601({ strict: true })
+    .withMessage("employmentHistories[].endDate must be a valid ISO 8601 date")
+    .custom((value, { req }) => {
+      if (!value) return true;
+      const endDate = new Date(value);
+      const startDate = new Date((req.body.employmentHistories as any[])?.[
+        (req.body.employmentHistories as any[]).findIndex(e => e.endDate === value)
+      ]?.startDate);
+      if (endDate < startDate) {
+        throw new Error("employmentHistories[].endDate must be greater than or equal to startDate");
+      }
+      return true;
+    }),
+  body("employmentHistories.*.city")
+    .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage("employmentHistories[].city is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("employmentHistories[].city must not exceed 255 characters"),
+  body("employmentHistories.*.description")
+    .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage("employmentHistories[].description is required")
+    .trim()
+    .isLength({ min: 1 })
+    .withMessage("employmentHistories[].description cannot be empty"),
+];
+
 export const createUserValidator: ValidationChain[] = [
   body("wantedJobTitle")
     .notEmpty()
@@ -229,6 +348,7 @@ export const createUserValidator: ValidationChain[] = [
     .withMessage("photoUrl cannot be empty"),
   ...skillsValidatorRequired,
   ...educationsValidatorRequired,
+  ...employmentHistoriesValidatorRequired,
 ];
 
 export const updateUserValidator: ValidationChain[] = [
@@ -328,6 +448,7 @@ export const updateUserValidator: ValidationChain[] = [
     .withMessage("photoUrl cannot be empty"),
   ...skillsValidatorOptional,
   ...educationsValidatorOptional,
+  ...employmentHistoriesValidatorOptional,
 ];
 
 export const idParamValidator: ValidationChain[] = [
