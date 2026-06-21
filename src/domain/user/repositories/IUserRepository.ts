@@ -8,4 +8,5 @@ export interface IUserRepository {
     id: string,
     data: Omit<User, "id" | "createdAt" | "updatedAt">,
   ): Promise<User>;
+  findAll(): Promise<User[]>;
 }

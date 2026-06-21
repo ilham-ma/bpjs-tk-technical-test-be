@@ -23,6 +23,11 @@ const fileStorage = new LocalFileStorageService();
 const userService = new UserService(userRepository, skillRepository, educationRepository, employmentHistoryRepository, fileStorage);
 const userController = new UserController(userService);
 
+router.get(
+  "/",
+  userController.findAll,
+);
+
 router.post(
   "/",
   createUserValidator,
