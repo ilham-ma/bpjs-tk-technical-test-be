@@ -8,7 +8,7 @@ export class PrismaUserRepository implements IUserRepository {
   async findById(id: string): Promise<User | null> {
     return await prisma.user.findUnique({
       where: { id },
-      include: { skills: true },
+      include: { skills: true, educations: true },
     });
   }
 
@@ -25,6 +25,7 @@ export class PrismaUserRepository implements IUserRepository {
     return {
       ...result,
       skills: [],
+      educations: [],
     };
   }
 
@@ -36,6 +37,7 @@ export class PrismaUserRepository implements IUserRepository {
     return {
       ...result,
       skills: [],
+      educations: [],
     };
   }
 }

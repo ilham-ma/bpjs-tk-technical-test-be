@@ -39,6 +39,99 @@ const skillsValidatorOptional: ValidationChain[] = [
     .withMessage("skills[].level must be one of: Basic, Intermediate, Expert"),
 ];
 
+const educationsValidatorRequired: ValidationChain[] = [
+  body("educations")
+    .isArray({ min: 1 })
+    .withMessage("educations must contain at least 1 item"),
+  body("educations.*.school")
+    .notEmpty()
+    .withMessage("educations[].school is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("educations[].school must not exceed 255 characters"),
+  body("educations.*.degree")
+    .notEmpty()
+    .withMessage("educations[].degree is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("educations[].degree must not exceed 255 characters"),
+  body("educations.*.startDate")
+    .notEmpty()
+    .withMessage("educations[].startDate is required")
+    .isISO8601({ strict: true })
+    .withMessage("educations[].startDate must be a valid ISO 8601 date")
+    .custom((value) => {
+      const date = new Date(value);
+      if (date > new Date()) {
+        throw new Error("educations[].startDate must not be in the future");
+      }
+      return true;
+    }),
+  body("educations.*.endDate")
+    .optional({ checkFalsy: true })
+    .isISO8601({ strict: true })
+    .withMessage("educations[].endDate must be a valid ISO 8601 date")
+    .custom((value, { req }) => {
+      if (!value) return true;
+      const endDate = new Date(value);
+      const startDate = new Date((req.body.educations as any[])?.[
+        (req.body.educations as any[]).findIndex(e => e.endDate === value)
+      ]?.startDate);
+      if (endDate < startDate) {
+        throw new Error("educations[].endDate must be greater than or equal to startDate");
+      }
+      return true;
+    }),
+];
+
+const educationsValidatorOptional: ValidationChain[] = [
+  body("educations")
+    .optional()
+    .isArray({ min: 1 })
+    .withMessage("educations must contain at least 1 item"),
+  body("educations.*.school")
+    .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage("educations[].school is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("educations[].school must not exceed 255 characters"),
+  body("educations.*.degree")
+    .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage("educations[].degree is required")
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("educations[].degree must not exceed 255 characters"),
+  body("educations.*.startDate")
+    .optional({ checkFalsy: true })
+    .isISO8601({ strict: true })
+    .withMessage("educations[].startDate must be a valid ISO 8601 date")
+    .custom((value) => {
+      if (!value) return true;
+      const date = new Date(value);
+      if (date > new Date()) {
+        throw new Error("educations[].startDate must not be in the future");
+      }
+      return true;
+    }),
+  body("educations.*.endDate")
+    .optional({ checkFalsy: true })
+    .isISO8601({ strict: true })
+    .withMessage("educations[].endDate must be a valid ISO 8601 date")
+    .custom((value, { req }) => {
+      if (!value) return true;
+      const endDate = new Date(value);
+      const startDate = new Date((req.body.educations as any[])?.[
+        (req.body.educations as any[]).findIndex(e => e.endDate === value)
+      ]?.startDate);
+      if (endDate < startDate) {
+        throw new Error("educations[].endDate must be greater than or equal to startDate");
+      }
+      return true;
+    }),
+];
+
 export const createUserValidator: ValidationChain[] = [
   body("wantedJobTitle")
     .notEmpty()
@@ -135,6 +228,7 @@ export const createUserValidator: ValidationChain[] = [
     .isLength({ min: 1 })
     .withMessage("photoUrl cannot be empty"),
   ...skillsValidatorRequired,
+  ...educationsValidatorRequired,
 ];
 
 export const updateUserValidator: ValidationChain[] = [
@@ -233,6 +327,7 @@ export const updateUserValidator: ValidationChain[] = [
     .isLength({ min: 1 })
     .withMessage("photoUrl cannot be empty"),
   ...skillsValidatorOptional,
+  ...educationsValidatorOptional,
 ];
 
 export const idParamValidator: ValidationChain[] = [

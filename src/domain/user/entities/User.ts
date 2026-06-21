@@ -1,4 +1,5 @@
 import { Skill } from '../../skill/entities/Skill';
+import { Education } from '../../education/entities/Education';
 
 export type User = {
   id: string;
@@ -19,4 +20,5 @@ export type User = {
   createdAt: Date;
   updatedAt: Date;
   skills: Skill[];
+  educations: Education[];
 };

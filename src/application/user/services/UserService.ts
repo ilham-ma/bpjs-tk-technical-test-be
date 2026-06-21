@@ -4,11 +4,13 @@ import { AppError } from "../../../shared/errors/AppError";
 import { User } from "../../../domain/user/entities/User";
 import { IUserRepository } from "../../../domain/user/repositories/IUserRepository";
 import { ISkillRepository } from "../../../domain/skill/repositories/ISkillRepository";
+import { IEducationRepository } from "../../../domain/education/repositories/IEducationRepository";
 
 export class UserService {
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly skillRepository: ISkillRepository,
+    private readonly educationRepository: IEducationRepository,
   ) {}
 
   async create(dto: CreateUserDTO): Promise<User> {
@@ -17,15 +19,16 @@ export class UserService {
       throw new AppError("Email already registered", 409);
     }
 
-    const { skills, ...userData } = dto;
+    const { skills, educations, ...userData } = dto;
     const user = await this.userRepository.create(userData as any);
 
-    const userWithSkills = {
+    const userWithSkillsAndEducation = {
       ...user,
       skills: await this.skillRepository.replaceForUser(user.id, skills),
+      educations: await this.educationRepository.replaceForUser(user.id, educations),
     };
 
-    return userWithSkills;
+    return userWithSkillsAndEducation;
   }
 
   async update(id: string, dto: UpdateUserDTO): Promise<User> {
@@ -41,19 +44,25 @@ export class UserService {
       }
     }
 
-    const { skills, ...userData } = dto;
+    const { skills, educations, ...userData } = dto;
     const updatedUser = await this.userRepository.update(id, userData as any);
 
+    let resultSkills = existing.skills;
+    let resultEducations = existing.educations;
+
     if (skills !== undefined) {
-      const updatedSkills = await this.skillRepository.replaceForUser(id, skills);
-      return {
-        ...updatedUser,
-        skills: updatedSkills,
-      };
+      resultSkills = await this.skillRepository.replaceForUser(id, skills);
     }
 
-    const userWithSkills = await this.userRepository.findById(id);
-    return userWithSkills!;
+    if (educations !== undefined) {
+      resultEducations = await this.educationRepository.replaceForUser(id, educations);
+    }
+
+    return {
+      ...updatedUser,
+      skills: resultSkills,
+      educations: resultEducations,
+    };
   }
 
   async findById(id: string): Promise<User> {
