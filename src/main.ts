@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { APP_CONFIG } from "./config/app.config";
 import { errorHandler } from "./infrastructure/middlewares/errorHandler";
+import userRoutes from "./infrastructure/modules/user/routes/userRoutes";
 
 const app = express();
 
@@ -13,6 +14,8 @@ app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(errorHandler);
+
+app.use("/api/user", userRoutes);
 
 app.listen(APP_CONFIG.port, () => {
   console.log(`Server running on port ${APP_CONFIG.port}`);
