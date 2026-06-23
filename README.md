@@ -80,13 +80,23 @@ npm run prisma:generate
 npm run prisma:migrate
 ```
 
+### 4. Seed Master Data
+
+Run the seeder to populate the master skill data (required before running the app for the first time):
+
+```bash
+npm run prisma:seed
+```
+
+The seeder is idempotent — re-running it will skip skills that already exist.
+
 (Optional) Open Prisma Studio to inspect the data:
 
 ```bash
 npm run prisma:studio
 ```
 
-### 4. Run the Server
+### 5. Run the Server
 
 **Development (auto-reload via tsx):**
 
@@ -117,6 +127,7 @@ The server will run at `http://localhost:3000` (or the port defined in `.env`).
 | `npm run prisma:migrate`      | Run migrations (dev)               |
 | `npm run prisma:migrate:prod` | Apply migrations (production)      |
 | `npm run prisma:studio`       | Open Prisma Studio                 |
+| `npm run prisma:seed`         | Seed master skill data             |
 
 ## API Endpoints
 
