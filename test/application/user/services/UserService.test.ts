@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { UserService } from "../../../../src/application/user/services/UserService";
 import { IUserRepository } from "../../../../src/domain/user/repositories/IUserRepository";
 import { ISkillRepository } from "../../../../src/domain/skill/repositories/ISkillRepository";
@@ -100,8 +100,8 @@ describe("UserService", () => {
           {
             school: "University of Technology",
             degree: "Bachelor of Computer Science",
-            startDate: "2018-sep",
-            endDate: "2022-jun",
+            startDate: "2018-09",
+            endDate: "2022-06",
             city: "Bandung",
             description: "Studied computer science fundamentals",
           },
@@ -110,7 +110,7 @@ describe("UserService", () => {
           {
             jobTitle: "Software Engineer",
             employer: "Tech Corp",
-            startDate: "2022-jul",
+            startDate: "2022-07",
             endDate: null,
             city: "Jakarta",
             description: "Developing backend systems",
@@ -186,8 +186,8 @@ describe("UserService", () => {
           {
             school: "State University",
             degree: "Master of Science",
-            startDate: "2020-sep",
-            endDate: "2022-jun",
+            startDate: "2020-09",
+            endDate: "2022-06",
             city: "Surabaya",
             description: "Specialized in distributed systems",
           },
@@ -196,8 +196,8 @@ describe("UserService", () => {
           {
             jobTitle: "Developer",
             employer: "Company X",
-            startDate: "2021-jan",
-            endDate: "2023-dec",
+            startDate: "2021-01",
+            endDate: "2023-12",
             city: "Jakarta",
             description: "Development work",
           },
@@ -224,7 +224,7 @@ describe("UserService", () => {
         {
           school: "Advanced Institute",
           degree: "Master of Science",
-          startDate: "2022-sep",
+          startDate: "2022-09",
           endDate: null,
           city: "Jakarta",
           description: "Currently pursuing master degree",
@@ -234,7 +234,7 @@ describe("UserService", () => {
         {
           jobTitle: "Senior Developer",
           employer: "Tech Corp",
-          startDate: "2023-jan",
+          startDate: "2023-01",
           endDate: null,
           city: "Jakarta",
           description: "Senior role",

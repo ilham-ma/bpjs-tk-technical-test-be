@@ -22,7 +22,7 @@ describe("userValidator", () => {
     drivingLicense: "DL123456",
     nationality: "Indonesian",
     placeOfBirth: "Jakarta",
-    dateOfBirth: "1990-jan-15",
+    dateOfBirth: "1990-01-15",
     photoUrl: "/photos/john.jpg",
     professionalSummary: "Experienced backend engineer",
     skills: [{ name: "TypeScript", level: "Expert" }],
@@ -30,8 +30,8 @@ describe("userValidator", () => {
       {
         school: "University of Technology",
         degree: "Bachelor of Computer Science",
-        startDate: "2018-sep",
-        endDate: "2022-jun",
+        startDate: "2018-09",
+        endDate: "2022-06",
         city: "Bandung",
         description: "Studied computer science fundamentals",
       },
@@ -40,7 +40,7 @@ describe("userValidator", () => {
       {
         jobTitle: "Software Engineer",
         employer: "Tech Corp",
-        startDate: "2022-jul",
+        startDate: "2022-07",
         endDate: null,
         city: "Jakarta",
         description: "Developing backend systems",
@@ -142,7 +142,7 @@ describe("userValidator", () => {
 
     it("should fail when dateOfBirth is in the future", async () => {
       const req = {
-        body: { ...validUserData, dateOfBirth: "2099-dec-31" },
+        body: { ...validUserData, dateOfBirth: "2099-12-31" },
       } as any;
 
       for (const validator of createUserValidator) {
@@ -169,7 +169,7 @@ describe("userValidator", () => {
       expect(errors.isEmpty()).toBe(false);
       const errs = errors.array() as any[];
       const dateError = errs.find((e) => e.path === "dateOfBirth");
-      expect(dateError?.msg).toContain("YYYY-mmm-DD");
+      expect(dateError?.msg).toContain("YYYY-MM-DD");
     });
 
     it("should trim whitespace from string fields", async () => {
@@ -329,8 +329,8 @@ describe("userValidator", () => {
             {
               school: "University",
               degree: "Bachelor",
-              startDate: "2099-dec",
-              endDate: "2022-jun",
+              startDate: "2099-12",
+              endDate: "2022-06",
               city: "Jakarta",
               description: "Bachelor program",
             },
@@ -357,8 +357,8 @@ describe("userValidator", () => {
             {
               school: "University",
               degree: "Bachelor",
-              startDate: "2022-jun",
-              endDate: "2018-sep",
+              startDate: "2022-06",
+              endDate: "2018-09",
               city: "Jakarta",
               description: "Bachelor program",
             },
@@ -385,7 +385,7 @@ describe("userValidator", () => {
             {
               school: "Current University",
               degree: "Master",
-              startDate: "2022-sep",
+              startDate: "2022-09",
               endDate: null,
               city: "Jakarta",
               description: "Master program",
@@ -407,15 +407,15 @@ describe("userValidator", () => {
         {
           school: "State University",
           degree: "Bachelor of Science",
-          startDate: "2018-sep",
-          endDate: "2022-jun",
+          startDate: "2018-09",
+          endDate: "2022-06",
           city: "Jakarta",
           description: "Bachelor of Science program",
         },
         {
           school: "Advanced Institute",
           degree: "Master of Science",
-          startDate: "2022-sep",
+          startDate: "2022-09",
           endDate: null,
           city: "Bandung",
           description: "Master of Science program",
@@ -555,7 +555,7 @@ describe("userValidator", () => {
         {
           school: "Updated University",
           degree: "Master",
-          startDate: "2020-sep",
+          startDate: "2020-09",
           endDate: null,
           city: "Jakarta",
           description: "Master degree program",
