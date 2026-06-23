@@ -6,10 +6,15 @@ import { IUserRepository } from "../../../../domain/user/repositories/IUserRepos
 
 export class PrismaUserRepository implements IUserRepository {
   async findById(id: string): Promise<User | null> {
-    return await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id },
-      include: { skills: true, educations: true, employmentHistories: true },
+      include: { skills: { include: { skill: true } }, educations: true, employmentHistories: true },
     });
+    if (!user) return null;
+    return {
+      ...user,
+      skills: user.skills.map((us) => us.skill),
+    };
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -44,9 +49,13 @@ export class PrismaUserRepository implements IUserRepository {
   }
 
   async findAll(): Promise<User[]> {
-    return await prisma.user.findMany({
-      include: { skills: true, educations: true, employmentHistories: true },
+    const users = await prisma.user.findMany({
+      include: { skills: { include: { skill: true } }, educations: true, employmentHistories: true },
       orderBy: { createdAt: 'desc' },
     });
+    return users.map((user) => ({
+      ...user,
+      skills: user.skills.map((us) => us.skill),
+    }));
   }
 }

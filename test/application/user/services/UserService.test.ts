@@ -51,7 +51,11 @@ describe("UserService", () => {
       findAll: vi.fn(),
     };
     mockSkillRepository = {
-      replaceForUser: vi.fn(),
+      create: vi.fn(),
+      findAll: vi.fn(),
+      findById: vi.fn(),
+      findManyByIds: vi.fn(),
+      linkUserSkills: vi.fn(),
       findByUserId: vi.fn(),
     };
     mockEducationRepository = {
@@ -73,6 +77,7 @@ describe("UserService", () => {
 
   describe("create", () => {
     it("should create user successfully with skills, educations, and employment histories", async () => {
+      const skillId1 = "550e8400-e29b-41d4-a716-446655440001";
       const dto: CreateUserDTO = {
         wantedJobTitle: "Software Engineer",
         firstName: "John",
@@ -89,7 +94,7 @@ describe("UserService", () => {
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: "/photos/john.jpg",
         professionalSummary: "Experienced backend engineer",
-        skills: [{ name: "TypeScript", level: "Expert" }],
+        skills: [skillId1],
         educations: [
           {
             school: "University of Technology",
@@ -119,13 +124,9 @@ describe("UserService", () => {
         educations: [],
         employmentHistories: [],
       });
-      vi.mocked(mockSkillRepository.replaceForUser).mockResolvedValue(
-        dto.skills.map((skill, idx) => ({
-          id: `skill-${idx}`,
-          ...skill,
-          userId: mockUser.id,
-        }))
-      );
+      vi.mocked(mockSkillRepository.linkUserSkills).mockResolvedValue([
+        { id: skillId1, name: "TypeScript", level: "Expert" },
+      ]);
       vi.mocked(mockEducationRepository.replaceForUser).mockResolvedValue(
         dto.educations.map((edu, idx) => ({
           id: `education-${idx}`,
@@ -145,7 +146,7 @@ describe("UserService", () => {
 
       expect(mockRepository.findByEmail).toHaveBeenCalledWith(dto.email);
       expect(mockRepository.create).toHaveBeenCalled();
-      expect(mockSkillRepository.replaceForUser).toHaveBeenCalledWith(
+      expect(mockSkillRepository.linkUserSkills).toHaveBeenCalledWith(
         mockUser.id,
         dto.skills
       );
@@ -163,6 +164,7 @@ describe("UserService", () => {
     });
 
     it("should throw error if email already exists", async () => {
+      const skillId1 = "550e8400-e29b-41d4-a716-446655440001";
       const dto: CreateUserDTO = {
         wantedJobTitle: "Software Engineer",
         firstName: "Jane",
@@ -179,7 +181,7 @@ describe("UserService", () => {
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: "/photos/jane.jpg",
         professionalSummary: "Backend engineer with 5 years experience",
-        skills: [{ name: "Java", level: "Intermediate" }],
+        skills: [skillId1],
         educations: [
           {
             school: "State University",
@@ -218,7 +220,8 @@ describe("UserService", () => {
   describe("update", () => {
     it("should update user successfully with skills, educations, and employment histories", async () => {
       const userId = mockUser.id;
-      const skills = [{ name: "React", level: "Intermediate" }];
+      const skillId1 = "550e8400-e29b-41d4-a716-446655440001";
+      const skillIds = [skillId1];
       const educations = [
         {
           school: "Advanced Institute",
@@ -254,7 +257,7 @@ describe("UserService", () => {
         placeOfBirth: "Jakarta",
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: "/photos/john-updated.jpg",
-        skills,
+        skills: skillIds,
         educations,
         employmentHistories,
       };
@@ -277,13 +280,9 @@ describe("UserService", () => {
         educations: [],
         employmentHistories: [],
       });
-      vi.mocked(mockSkillRepository.replaceForUser).mockResolvedValue(
-        skills.map((skill, idx) => ({
-          id: `skill-${idx}`,
-          ...skill,
-          userId,
-        }))
-      );
+      vi.mocked(mockSkillRepository.linkUserSkills).mockResolvedValue([
+        { id: skillId1, name: "React", level: "Intermediate" },
+      ]);
       vi.mocked(mockEducationRepository.replaceForUser).mockResolvedValue(
         educations.map((edu, idx) => ({
           id: `education-${idx}`,
@@ -303,7 +302,7 @@ describe("UserService", () => {
 
       expect(mockRepository.findById).toHaveBeenCalledWith(userId);
       expect(mockRepository.update).toHaveBeenCalled();
-      expect(mockSkillRepository.replaceForUser).toHaveBeenCalledWith(userId, skills);
+      expect(mockSkillRepository.linkUserSkills).toHaveBeenCalledWith(userId, skillIds);
       expect(mockEducationRepository.replaceForUser).toHaveBeenCalledWith(userId, educations);
       expect(mockEmploymentHistoryRepository.replaceForUser).toHaveBeenCalledWith(userId, employmentHistories);
       expect(result.skills).toHaveLength(1);
@@ -349,7 +348,7 @@ describe("UserService", () => {
 
       const result = await userService.update(userId, dto);
 
-      expect(mockSkillRepository.replaceForUser).not.toHaveBeenCalled();
+      expect(mockSkillRepository.linkUserSkills).not.toHaveBeenCalled();
       expect(mockEducationRepository.replaceForUser).not.toHaveBeenCalled();
       expect(mockEmploymentHistoryRepository.replaceForUser).not.toHaveBeenCalled();
       expect(result.skills).toEqual(mockUser.skills);
@@ -359,6 +358,7 @@ describe("UserService", () => {
 
     it("should throw error if user not found", async () => {
       const userId = "invalid-id";
+      const skillId1 = "550e8400-e29b-41d4-a716-446655440001";
       const dto: UpdateUserDTO = {
         wantedJobTitle: "Software Engineer",
         firstName: "John",
@@ -375,7 +375,7 @@ describe("UserService", () => {
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: "/photos/john.jpg",
         professionalSummary: "Experienced backend engineer",
-        skills: [{ name: "TypeScript", level: "Expert" }],
+        skills: [skillId1],
         educations: [
           {
             school: "University",
@@ -412,6 +412,7 @@ describe("UserService", () => {
 
     it("should throw error if new email already exists", async () => {
       const userId = mockUser.id;
+      const skillId1 = "550e8400-e29b-41d4-a716-446655440001";
       const dto: UpdateUserDTO = {
         wantedJobTitle: "Senior Software Engineer",
         firstName: "John",
@@ -428,7 +429,7 @@ describe("UserService", () => {
         dateOfBirth: new Date("1990-01-15"),
         photoUrl: "/photos/john-updated.jpg",
         professionalSummary: "Senior backend engineer leading distributed teams",
-        skills: [{ name: "React", level: "Intermediate" }],
+        skills: [skillId1],
         educations: [
           {
             school: "State University",

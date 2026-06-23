@@ -4,5 +4,4 @@ export type Skill = {
   id: string;
   name: string;
   level: SkillLevel;
-  userId: string;
 };

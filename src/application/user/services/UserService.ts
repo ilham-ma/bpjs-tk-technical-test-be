@@ -28,7 +28,7 @@ export class UserService {
 
     const userWithSkillsEducationAndEmploymentHistories = {
       ...user,
-      skills: await this.skillRepository.replaceForUser(user.id, skills),
+      skills: await this.skillRepository.linkUserSkills(user.id, skills),
       educations: await this.educationRepository.replaceForUser(user.id, educations),
       employmentHistories: await this.employmentHistoryRepository.replaceForUser(user.id, employmentHistories),
     };
@@ -63,7 +63,7 @@ export class UserService {
     let resultEmploymentHistories = existing.employmentHistories;
 
     if (skills !== undefined) {
-      resultSkills = await this.skillRepository.replaceForUser(id, skills);
+      resultSkills = await this.skillRepository.linkUserSkills(id, skills);
     }
 
     if (educations !== undefined) {

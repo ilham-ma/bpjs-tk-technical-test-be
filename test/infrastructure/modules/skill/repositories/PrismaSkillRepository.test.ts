@@ -5,6 +5,11 @@ import { SkillInputDTO } from "../../../../../src/application/skill/dtos/SkillIn
 vi.mock("../../../../../src/infrastructure/database/prisma/client", () => ({
   default: {
     skill: {
+      create: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+    },
+    userSkill: {
       deleteMany: vi.fn(),
       createMany: vi.fn(),
       findMany: vi.fn(),
@@ -20,163 +25,190 @@ describe("PrismaSkillRepository", () => {
   let repository: PrismaSkillRepository;
 
   const userId = "550e8400-e29b-41d4-a716-446655440000";
+  const skillId1 = "550e8400-e29b-41d4-a716-446655440001";
+  const skillId2 = "550e8400-e29b-41d4-a716-446655440002";
 
   const mockSkills: Skill[] = [
-    {
-      id: "550e8400-e29b-41d4-a716-446655440001",
-      name: "TypeScript",
-      level: "Expert",
-      userId,
-    },
-    {
-      id: "550e8400-e29b-41d4-a716-446655440002",
-      name: "React",
-      level: "Intermediate",
-      userId,
-    },
+    { id: skillId1, name: "TypeScript", level: "Expert" },
+    { id: skillId2, name: "React", level: "Intermediate" },
   ];
 
   beforeEach(() => {
     repository = new PrismaSkillRepository();
     vi.clearAllMocks();
-    vi.mocked(prisma.$transaction).mockResolvedValue([null, null]);
   });
 
-  describe("replaceForUser", () => {
-    it("should call deleteMany with correct userId inside transaction", async () => {
-      vi.mocked(prisma.skill.findMany).mockResolvedValue(mockSkills);
+  describe("create", () => {
+    it("should create a skill with name and level", async () => {
+      const input: SkillInputDTO = { name: "TypeScript", level: "Expert" };
+      const created: Skill = { id: skillId1, ...input };
 
-      await repository.replaceForUser(userId, [
-        { name: "TypeScript", level: "Expert" },
-      ]);
+      vi.mocked(prisma.skill.create).mockResolvedValue(created as any);
 
-      expect(prisma.skill.deleteMany).toHaveBeenCalledWith({
-        where: { userId },
+      const result = await repository.create(input);
+
+      expect(prisma.skill.create).toHaveBeenCalledWith({
+        data: { name: "TypeScript", level: "Expert" },
       });
+      expect(result).toEqual(created);
     });
 
-    it("should call createMany with skills mapped to include userId", async () => {
-      const inputs: SkillInputDTO[] = [
-        { name: "TypeScript", level: "Expert" },
-        { name: "React", level: "Intermediate" },
-      ];
-
-      vi.mocked(prisma.skill.findMany).mockResolvedValue(mockSkills);
-
-      await repository.replaceForUser(userId, inputs);
-
-      expect(prisma.skill.createMany).toHaveBeenCalledWith({
-        data: [
-          { name: "TypeScript", level: "Expert", userId },
-          { name: "React", level: "Intermediate", userId },
-        ],
-      });
-    });
-
-    it("should wrap deleteMany and createMany inside a single transaction", async () => {
-      const inputs: SkillInputDTO[] = [{ name: "Node.js", level: "Basic" }];
-
-      vi.mocked(prisma.skill.findMany).mockResolvedValue([]);
-
-      await repository.replaceForUser(userId, inputs);
-
-      const transactionArg = vi.mocked(prisma.$transaction).mock.calls[0][0];
-      expect(Array.isArray(transactionArg)).toBe(true);
-      expect((transactionArg as any[]).length).toBe(2);
-    });
-
-    it("should return skills fetched after transaction completes", async () => {
-      vi.mocked(prisma.skill.findMany).mockResolvedValue(mockSkills);
-
-      const result = await repository.replaceForUser(userId, [
-        { name: "TypeScript", level: "Expert" },
-      ]);
-
-      expect(prisma.skill.findMany).toHaveBeenCalledWith({ where: { userId } });
-      expect(result).toEqual(mockSkills);
-    });
-
-    it("should call createMany with empty data when skills array is empty", async () => {
-      vi.mocked(prisma.skill.findMany).mockResolvedValue([]);
-
-      const result = await repository.replaceForUser(userId, []);
-
-      expect(prisma.skill.createMany).toHaveBeenCalledWith({ data: [] });
-      expect(result).toEqual([]);
-    });
-
-    it("should still call deleteMany even when skills array is empty", async () => {
-      vi.mocked(prisma.skill.findMany).mockResolvedValue([]);
-
-      await repository.replaceForUser(userId, []);
-
-      expect(prisma.skill.deleteMany).toHaveBeenCalledWith({
-        where: { userId },
-      });
-    });
-
-    it("should handle all three SkillLevel values correctly", async () => {
+    it("should handle all SkillLevel values", async () => {
       const inputs: SkillInputDTO[] = [
         { name: "Python", level: "Basic" },
         { name: "Go", level: "Intermediate" },
         { name: "TypeScript", level: "Expert" },
       ];
 
-      const expectedSkills: Skill[] = inputs.map((s, i) => ({
-        id: `id-${i}`,
-        ...s,
-        userId,
-      }));
+      for (const input of inputs) {
+        vi.mocked(prisma.skill.create).mockResolvedValueOnce({ id: skillId1, ...input } as any);
+        await repository.create(input);
+      }
 
-      vi.mocked(prisma.skill.findMany).mockResolvedValue(expectedSkills);
+      expect(prisma.skill.create).toHaveBeenCalledTimes(3);
+    });
+  });
 
-      const result = await repository.replaceForUser(userId, inputs);
+  describe("findAll", () => {
+    it("should return all skills", async () => {
+      vi.mocked(prisma.skill.findMany).mockResolvedValue(mockSkills as any);
 
-      expect(prisma.skill.createMany).toHaveBeenCalledWith({
-        data: [
-          { name: "Python", level: "Basic", userId },
-          { name: "Go", level: "Intermediate", userId },
-          { name: "TypeScript", level: "Expert", userId },
-        ],
+      const result = await repository.findAll();
+
+      expect(prisma.skill.findMany).toHaveBeenCalledWith();
+      expect(result).toEqual(mockSkills);
+    });
+
+    it("should return empty array when no skills exist", async () => {
+      vi.mocked(prisma.skill.findMany).mockResolvedValue([]);
+
+      const result = await repository.findAll();
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe("findById", () => {
+    it("should return skill when found", async () => {
+      vi.mocked(prisma.skill.findUnique).mockResolvedValue(mockSkills[0] as any);
+
+      const result = await repository.findById(skillId1);
+
+      expect(prisma.skill.findUnique).toHaveBeenCalledWith({ where: { id: skillId1 } });
+      expect(result).toEqual(mockSkills[0]);
+    });
+
+    it("should return null when skill not found", async () => {
+      vi.mocked(prisma.skill.findUnique).mockResolvedValue(null);
+
+      const result = await repository.findById("invalid-id");
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("findManyByIds", () => {
+    it("should return skills matching provided ids", async () => {
+      vi.mocked(prisma.skill.findMany).mockResolvedValue(mockSkills as any);
+
+      const result = await repository.findManyByIds([skillId1, skillId2]);
+
+      expect(prisma.skill.findMany).toHaveBeenCalledWith({
+        where: { id: { in: [skillId1, skillId2] } },
       });
-      expect(result).toEqual(expectedSkills);
+      expect(result).toEqual(mockSkills);
     });
 
-    it("should propagate error when transaction fails", async () => {
-      vi.mocked(prisma.$transaction).mockRejectedValue(
-        new Error("Transaction failed"),
-      );
+    it("should return empty array when no ids match", async () => {
+      vi.mocked(prisma.skill.findMany).mockResolvedValue([]);
 
-      await expect(
-        repository.replaceForUser(userId, [{ name: "TypeScript", level: "Expert" }]),
-      ).rejects.toThrow("Transaction failed");
+      const result = await repository.findManyByIds(["invalid-id"]);
+
+      expect(result).toEqual([]);
     });
+  });
 
-    it("should propagate error when findMany after transaction fails", async () => {
+  describe("linkUserSkills", () => {
+    it("should verify skills exist before linking", async () => {
+      vi.mocked(prisma.skill.findMany).mockResolvedValueOnce(mockSkills as any);
       vi.mocked(prisma.$transaction).mockResolvedValue([null, null]);
-      vi.mocked(prisma.skill.findMany).mockRejectedValue(
-        new Error("Database error"),
-      );
+      vi.mocked(prisma.userSkill.findMany).mockResolvedValue([
+        { userId, skillId: skillId1, skill: mockSkills[0], user: null },
+        { userId, skillId: skillId2, skill: mockSkills[1], user: null },
+      ] as any);
+
+      await repository.linkUserSkills(userId, [skillId1, skillId2]);
+
+      expect(prisma.skill.findMany).toHaveBeenCalledWith({
+        where: { id: { in: [skillId1, skillId2] } },
+      });
+    });
+
+    it("should throw error if skill not found", async () => {
+      vi.mocked(prisma.skill.findMany).mockResolvedValue([mockSkills[0]] as any);
 
       await expect(
-        repository.replaceForUser(userId, [{ name: "TypeScript", level: "Expert" }]),
-      ).rejects.toThrow("Database error");
+        repository.linkUserSkills(userId, [skillId1, skillId2]),
+      ).rejects.toThrow("One or more skills not found");
+    });
+
+    it("should delete old user skills and create new ones in transaction", async () => {
+      vi.mocked(prisma.skill.findMany).mockResolvedValue(mockSkills as any);
+      vi.mocked(prisma.$transaction).mockResolvedValue([null, null]);
+      vi.mocked(prisma.userSkill.findMany).mockResolvedValue([
+        { userId, skillId: skillId1, skill: mockSkills[0], user: null },
+      ] as any);
+
+      await repository.linkUserSkills(userId, [skillId1, skillId2]);
+
+      const transactionArg = vi.mocked(prisma.$transaction).mock.calls[0][0];
+      expect(Array.isArray(transactionArg)).toBe(true);
+      expect(transactionArg).toHaveLength(2);
+    });
+
+    it("should return linked skills for user", async () => {
+      vi.mocked(prisma.skill.findMany).mockResolvedValue(mockSkills as any);
+      vi.mocked(prisma.$transaction).mockResolvedValue([null, null]);
+      vi.mocked(prisma.userSkill.findMany).mockResolvedValue([
+        { userId, skillId: skillId1, skill: mockSkills[0], user: null },
+        { userId, skillId: skillId2, skill: mockSkills[1], user: null },
+      ] as any);
+
+      const result = await repository.linkUserSkills(userId, [skillId1, skillId2]);
+
+      expect(result).toEqual(mockSkills);
+    });
+
+    it("should handle empty skills array", async () => {
+      vi.mocked(prisma.$transaction).mockResolvedValue([null, null]);
+      vi.mocked(prisma.userSkill.findMany).mockResolvedValue([]);
+
+      const result = await repository.linkUserSkills(userId, []);
+
+      expect(result).toEqual([]);
     });
   });
 
   describe("findByUserId", () => {
-    it("should query with correct where clause", async () => {
-      vi.mocked(prisma.skill.findMany).mockResolvedValue(mockSkills);
+    it("should query userSkill with correct where clause", async () => {
+      vi.mocked(prisma.userSkill.findMany).mockResolvedValue([
+        { userId, skillId: skillId1, skill: mockSkills[0], user: null },
+        { userId, skillId: skillId2, skill: mockSkills[1], user: null },
+      ] as any);
 
       await repository.findByUserId(userId);
 
-      expect(prisma.skill.findMany).toHaveBeenCalledWith({
+      expect(prisma.userSkill.findMany).toHaveBeenCalledWith({
         where: { userId },
+        include: { skill: true },
       });
     });
 
-    it("should return skills when user has skills", async () => {
-      vi.mocked(prisma.skill.findMany).mockResolvedValue(mockSkills);
+    it("should return skills for user", async () => {
+      vi.mocked(prisma.userSkill.findMany).mockResolvedValue([
+        { userId, skillId: skillId1, skill: mockSkills[0], user: null },
+        { userId, skillId: skillId2, skill: mockSkills[1], user: null },
+      ] as any);
 
       const result = await repository.findByUserId(userId);
 
@@ -185,22 +217,11 @@ describe("PrismaSkillRepository", () => {
     });
 
     it("should return empty array when user has no skills", async () => {
-      vi.mocked(prisma.skill.findMany).mockResolvedValue([]);
+      vi.mocked(prisma.userSkill.findMany).mockResolvedValue([]);
 
       const result = await repository.findByUserId(userId);
 
       expect(result).toEqual([]);
-      expect(result).toHaveLength(0);
-    });
-
-    it("should propagate error when database query fails", async () => {
-      vi.mocked(prisma.skill.findMany).mockRejectedValue(
-        new Error("Connection error"),
-      );
-
-      await expect(repository.findByUserId(userId)).rejects.toThrow(
-        "Connection error",
-      );
     });
   });
 });

@@ -10,15 +10,9 @@ const skillsValidatorRequired: ValidationChain[] = [
   body("skills")
     .isArray({ min: 1 })
     .withMessage("skills must contain at least 1 item"),
-  body("skills.*.name")
-    .notEmpty()
-    .withMessage("skill name is required")
-    .trim()
-    .isLength({ max: 255 })
-    .withMessage("skill name must not exceed 255 characters"),
-  body("skills.*.level")
-    .isIn(["Basic", "Intermediate", "Expert"])
-    .withMessage("skill level must be one of: Basic, Intermediate, Expert"),
+  body("skills.*")
+    .isUUID(4)
+    .withMessage("each skill must be a valid UUID"),
 ];
 
 const skillsValidatorOptional: ValidationChain[] = [
@@ -26,17 +20,10 @@ const skillsValidatorOptional: ValidationChain[] = [
     .optional()
     .isArray({ min: 1 })
     .withMessage("skills must contain at least 1 item"),
-  body("skills.*.name")
-    .optional({ checkFalsy: true })
-    .notEmpty()
-    .withMessage("skill name is required")
-    .trim()
-    .isLength({ max: 255 })
-    .withMessage("skill name must not exceed 255 characters"),
-  body("skills.*.level")
-    .optional({ checkFalsy: true })
-    .isIn(["Basic", "Intermediate", "Expert"])
-    .withMessage("skill level must be one of: Basic, Intermediate, Expert"),
+  body("skills.*")
+    .optional()
+    .isUUID(4)
+    .withMessage("each skill must be a valid UUID"),
 ];
 
 const educationsValidatorRequired: ValidationChain[] = [

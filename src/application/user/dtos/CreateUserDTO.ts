@@ -1,4 +1,3 @@
-import { SkillInputDTO } from '../../skill/dtos/SkillInputDTO';
 import { EducationInputDTO } from '../../education/dtos/EducationInputDTO';
 import { EmploymentHistoryInputDTO } from '../../employment-history/dtos/EmploymentHistoryInputDTO';
 
@@ -18,7 +17,7 @@ export type CreateUserDTO = {
   dateOfBirth: Date;
   photoUrl: string;
   professionalSummary: string;
-  skills: SkillInputDTO[];
+  skills: string[];
   educations: EducationInputDTO[];
   employmentHistories: EmploymentHistoryInputDTO[];
 };
