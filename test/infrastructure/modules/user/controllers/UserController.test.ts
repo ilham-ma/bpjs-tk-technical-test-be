@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { UserController } from "../../../../../src/infrastructure/modules/user/controllers/UserController";
 import { UserService } from "../../../../../src/application/user/services/UserService";
 import { AppError } from "../../../../../src/shared/errors/AppError";
@@ -108,7 +108,7 @@ describe("UserController", () => {
           drivingLicense: "DL123456",
           nationality: "Indonesian",
           placeOfBirth: "Jakarta",
-          dateOfBirth: "1990-jan-15",
+          dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
           professionalSummary: "Experienced backend engineer",
           skills: [{ name: "TypeScript", level: "Expert" }],
@@ -116,8 +116,8 @@ describe("UserController", () => {
             {
               school: "University of Technology",
               degree: "Bachelor of Computer Science",
-              startDate: "2018-sep",
-              endDate: "2022-jun",
+              startDate: "2018-09",
+              endDate: "2022-06",
               city: "Bandung",
               description: "Studied computer science fundamentals",
             },
@@ -158,7 +158,7 @@ describe("UserController", () => {
           drivingLicense: "DL123456",
           nationality: "Indonesian",
           placeOfBirth: "Jakarta",
-          dateOfBirth: "1990-jan-15",
+          dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john-updated.jpg",
           professionalSummary: "Senior backend engineer",
           skills: [{ id: "skill-1", name: "React", level: "Intermediate" }],
@@ -167,7 +167,7 @@ describe("UserController", () => {
               id: "edu-1",
               school: "Advanced Institute",
               degree: "Master of Science",
-              startDate: "2022-sep",
+              startDate: "2022-09",
               endDate: null,
               city: "Jakarta",
               description: "Currently pursuing master degree",
@@ -214,7 +214,7 @@ describe("UserController", () => {
           drivingLicense: "DL123456",
           nationality: "Indonesian",
           placeOfBirth: "Jakarta",
-          dateOfBirth: "1990-jan-15",
+          dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
           professionalSummary: "Experienced backend engineer",
           skills: [{ name: "TypeScript", level: "Expert" }],
@@ -222,8 +222,8 @@ describe("UserController", () => {
             {
               school: "University of Technology",
               degree: "Bachelor of Computer Science",
-              startDate: "2018-sep",
-              endDate: "2022-jun",
+              startDate: "2018-09",
+              endDate: "2022-06",
               city: "Bandung",
               description: "Studied computer science fundamentals",
             },
@@ -262,7 +262,7 @@ describe("UserController", () => {
           drivingLicense: "DL123456",
           nationality: "Indonesian",
           placeOfBirth: "Jakarta",
-          dateOfBirth: "1990-jan-15",
+          dateOfBirth: "1990-01-15",
           photoUrl: "/photos/john.jpg",
           professionalSummary: "Experienced backend engineer",
           skills: [{ name: "TypeScript", level: "Expert" }],
@@ -270,8 +270,8 @@ describe("UserController", () => {
             {
               school: "University of Technology",
               degree: "Bachelor of Computer Science",
-              startDate: "2018-sep",
-              endDate: "2022-jun",
+              startDate: "2018-09",
+              endDate: "2022-06",
               city: "Bandung",
               description: "Studied computer science fundamentals",
             },

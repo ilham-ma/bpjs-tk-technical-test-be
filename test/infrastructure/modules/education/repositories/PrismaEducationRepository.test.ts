@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Education } from "../../../../../src/domain/education/entities/Education";
 import { EducationInputDTO } from "../../../../../src/application/education/dtos/EducationInputDTO";
 
@@ -58,8 +58,8 @@ describe("PrismaEducationRepository", () => {
         {
           school: "University of Technology",
           degree: "Bachelor of Computer Science",
-          startDate: "2018-sep",
-          endDate: "2022-jun",
+          startDate: "2018-09",
+          endDate: "2022-06",
           city: "Bandung",
           description: "Studied computer science fundamentals",
         },
@@ -90,8 +90,8 @@ describe("PrismaEducationRepository", () => {
           id: mockEducations[0].id,
           school: "Updated University",
           degree: "Bachelor of Computer Science",
-          startDate: "2018-sep",
-          endDate: "2022-jun",
+          startDate: "2018-09",
+          endDate: "2022-06",
           city: "Bandung",
           description: "Studied computer science fundamentals",
         },
@@ -121,8 +121,8 @@ describe("PrismaEducationRepository", () => {
           id: "non-existent-id",
           school: "University",
           degree: "Bachelor",
-          startDate: "2020-sep",
-          endDate: "2024-jun",
+          startDate: "2020-09",
+          endDate: "2024-06",
           city: "Jakarta",
           description: "Bachelor program",
         },
@@ -154,8 +154,8 @@ describe("PrismaEducationRepository", () => {
           id: eduId1,
           school: "University of Technology",
           degree: "Bachelor of Computer Science",
-          startDate: "2018-sep",
-          endDate: "2022-jun",
+          startDate: "2018-09",
+          endDate: "2022-06",
           city: "Bandung",
           description: "Studied computer science fundamentals",
         },
@@ -186,15 +186,15 @@ describe("PrismaEducationRepository", () => {
           id: mockEducations[0].id,
           school: "University of Technology",
           degree: "Bachelor of Computer Science",
-          startDate: "2018-sep",
-          endDate: "2022-jun",
+          startDate: "2018-09",
+          endDate: "2022-06",
           city: "Bandung",
           description: "Studied computer science fundamentals",
         },
         {
           school: "Advanced Institute",
           degree: "Master of Science",
-          startDate: "2022-sep",
+          startDate: "2022-09",
           endDate: null,
           city: "Jakarta",
           description: "Currently pursuing master degree",

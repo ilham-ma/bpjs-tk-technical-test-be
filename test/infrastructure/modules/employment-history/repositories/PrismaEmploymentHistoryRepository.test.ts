@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { EmploymentHistory } from "../../../../../src/domain/employment-history/entities/EmploymentHistory";
 import { EmploymentHistoryInputDTO } from "../../../../../src/application/employment-history/dtos/EmploymentHistoryInputDTO";
 
@@ -58,8 +58,8 @@ describe("PrismaEmploymentHistoryRepository", () => {
         {
           jobTitle: "Senior Software Engineer",
           employer: "Tech Company A",
-          startDate: "2020-jan",
-          endDate: "2023-jun",
+          startDate: "2020-01",
+          endDate: "2023-06",
           city: "Jakarta",
           description: "Developed backend systems and APIs",
         },
@@ -90,8 +90,8 @@ describe("PrismaEmploymentHistoryRepository", () => {
           id: mockEmploymentHistories[0].id,
           jobTitle: "Updated Position",
           employer: "Tech Company A",
-          startDate: "2020-jan",
-          endDate: "2023-jun",
+          startDate: "2020-01",
+          endDate: "2023-06",
           city: "Jakarta",
           description: "Updated description",
         },
@@ -121,8 +121,8 @@ describe("PrismaEmploymentHistoryRepository", () => {
           id: "non-existent-id",
           jobTitle: "Senior Software Engineer",
           employer: "Tech Company A",
-          startDate: "2020-jan",
-          endDate: "2023-jun",
+          startDate: "2020-01",
+          endDate: "2023-06",
           city: "Jakarta",
           description: "Developed backend systems and APIs",
         },
@@ -154,8 +154,8 @@ describe("PrismaEmploymentHistoryRepository", () => {
           id: empId1,
           jobTitle: "Senior Software Engineer",
           employer: "Tech Company A",
-          startDate: "2020-jan",
-          endDate: "2023-jun",
+          startDate: "2020-01",
+          endDate: "2023-06",
           city: "Jakarta",
           description: "Developed backend systems and APIs",
         },
@@ -186,15 +186,15 @@ describe("PrismaEmploymentHistoryRepository", () => {
           id: mockEmploymentHistories[0].id,
           jobTitle: "Senior Software Engineer",
           employer: "Tech Company A",
-          startDate: "2020-jan",
-          endDate: "2023-jun",
+          startDate: "2020-01",
+          endDate: "2023-06",
           city: "Jakarta",
           description: "Developed backend systems and APIs",
         },
         {
           jobTitle: "Software Engineer",
           employer: "Tech Company B",
-          startDate: "2018-mar",
+          startDate: "2018-03",
           endDate: null,
           city: "Bandung",
           description: "Full stack development",

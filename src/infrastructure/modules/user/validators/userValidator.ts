@@ -10,20 +10,17 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 
 dayjs.extend(customParseFormat);
 
-const MONTH_ABBR = "(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)";
-const FULL_DATE_REGEX = new RegExp(`^\\d{4}-${MONTH_ABBR}-\\d{2}$`);
-const MONTH_YEAR_REGEX = new RegExp(`^\\d{4}-${MONTH_ABBR}$`);
+const FULL_DATE_REGEX = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+const MONTH_YEAR_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 function isValidFullDateString(value: string): boolean {
   if (!FULL_DATE_REGEX.test(value)) return false;
-  const normalized = value.replace(/-([a-z]{3})-/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}-`);
-  return dayjs(normalized, "YYYY-MMM-DD", true).isValid();
+  return dayjs(value, "YYYY-MM-DD", true).isValid();
 }
 
 function isValidMonthYearString(value: string): boolean {
   if (!MONTH_YEAR_REGEX.test(value)) return false;
-  const normalized = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-  return dayjs(normalized, "YYYY-MMM", true).isValid();
+  return dayjs(value, "YYYY-MM", true).isValid();
 }
 
 const skillsValidatorRequired: ValidationChain[] = [
@@ -113,10 +110,9 @@ const educationsValidatorRequired: ValidationChain[] = [
     .withMessage("educations startDate is required")
     .custom((value) => {
       if (!isValidMonthYearString(value)) {
-        throw new Error("educations startDate must be in format YYYY-mmm (e.g., 2026-jul)");
+        throw new Error("educations startDate must be in format YYYY-MM (e.g., 2026-07)");
       }
-      const normalized = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-      if (dayjs(normalized, "YYYY-MMM", true).isAfter(dayjs())) {
+      if (dayjs(value, "YYYY-MM", true).isAfter(dayjs())) {
         throw new Error("educations startDate must not be in the future");
       }
       return true;
@@ -126,14 +122,12 @@ const educationsValidatorRequired: ValidationChain[] = [
     .custom((value, { req }) => {
       if (value === null || value === undefined || value === "") return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("educations endDate must be in format YYYY-mmm (e.g., 2026-jul)");
+        throw new Error("educations endDate must be in format YYYY-MM (e.g., 2026-07)");
       }
       const idx = (req.body.educations as any[]).findIndex((e) => e.endDate === value);
       const startRaw = (req.body.educations as any[])[idx]?.startDate;
       if (startRaw && isValidMonthYearString(startRaw)) {
-        const startCap = startRaw.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-        const endCap = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-        if (dayjs(endCap, "YYYY-MMM", true).isBefore(dayjs(startCap, "YYYY-MMM", true))) {
+        if (dayjs(value, "YYYY-MM", true).isBefore(dayjs(startRaw, "YYYY-MM", true))) {
           throw new Error("educations endDate must be greater than or equal to startDate");
         }
       }
@@ -181,10 +175,9 @@ const educationsValidatorOptional: ValidationChain[] = [
     .custom((value) => {
       if (!value) return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("educations startDate must be in format YYYY-mmm (e.g., 2026-jul)");
+        throw new Error("educations startDate must be in format YYYY-MM (e.g., 2026-07)");
       }
-      const normalized = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-      if (dayjs(normalized, "YYYY-MMM", true).isAfter(dayjs())) {
+      if (dayjs(value, "YYYY-MM", true).isAfter(dayjs())) {
         throw new Error("educations startDate must not be in the future");
       }
       return true;
@@ -194,14 +187,12 @@ const educationsValidatorOptional: ValidationChain[] = [
     .custom((value, { req }) => {
       if (!value) return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("educations endDate must be in format YYYY-mmm (e.g., 2026-jul)");
+        throw new Error("educations endDate must be in format YYYY-MM (e.g., 2026-07)");
       }
       const idx = (req.body.educations as any[]).findIndex((e) => e.endDate === value);
       const startRaw = (req.body.educations as any[])[idx]?.startDate;
       if (startRaw && isValidMonthYearString(startRaw)) {
-        const startCap = startRaw.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-        const endCap = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-        if (dayjs(endCap, "YYYY-MMM", true).isBefore(dayjs(startCap, "YYYY-MMM", true))) {
+        if (dayjs(value, "YYYY-MM", true).isBefore(dayjs(startRaw, "YYYY-MM", true))) {
           throw new Error("educations endDate must be greater than or equal to startDate");
         }
       }
@@ -251,10 +242,9 @@ const employmentHistoriesValidatorRequired: ValidationChain[] = [
     .withMessage("employmentHistories startDate is required")
     .custom((value) => {
       if (!isValidMonthYearString(value)) {
-        throw new Error("employmentHistories startDate must be in format YYYY-mmm (e.g., 2026-jul)");
+        throw new Error("employmentHistories startDate must be in format YYYY-MM (e.g., 2026-07)");
       }
-      const normalized = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-      if (dayjs(normalized, "YYYY-MMM", true).isAfter(dayjs())) {
+      if (dayjs(value, "YYYY-MM", true).isAfter(dayjs())) {
         throw new Error("employmentHistories startDate must not be in the future");
       }
       return true;
@@ -264,14 +254,12 @@ const employmentHistoriesValidatorRequired: ValidationChain[] = [
     .custom((value, { req }) => {
       if (value === null || value === undefined || value === "") return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("employmentHistories endDate must be in format YYYY-mmm (e.g., 2026-jul)");
+        throw new Error("employmentHistories endDate must be in format YYYY-MM (e.g., 2026-07)");
       }
       const idx = (req.body.employmentHistories as any[]).findIndex((e) => e.endDate === value);
       const startRaw = (req.body.employmentHistories as any[])[idx]?.startDate;
       if (startRaw && isValidMonthYearString(startRaw)) {
-        const startCap = startRaw.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-        const endCap = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-        if (dayjs(endCap, "YYYY-MMM", true).isBefore(dayjs(startCap, "YYYY-MMM", true))) {
+        if (dayjs(value, "YYYY-MM", true).isBefore(dayjs(startRaw, "YYYY-MM", true))) {
           throw new Error("employmentHistories endDate must be greater than or equal to startDate");
         }
       }
@@ -319,10 +307,9 @@ const employmentHistoriesValidatorOptional: ValidationChain[] = [
     .custom((value) => {
       if (!value) return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("employmentHistories startDate must be in format YYYY-mmm (e.g., 2026-jul)");
+        throw new Error("employmentHistories startDate must be in format YYYY-MM (e.g., 2026-07)");
       }
-      const normalized = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-      if (dayjs(normalized, "YYYY-MMM", true).isAfter(dayjs())) {
+      if (dayjs(value, "YYYY-MM", true).isAfter(dayjs())) {
         throw new Error("employmentHistories startDate must not be in the future");
       }
       return true;
@@ -332,14 +319,12 @@ const employmentHistoriesValidatorOptional: ValidationChain[] = [
     .custom((value, { req }) => {
       if (!value) return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("employmentHistories endDate must be in format YYYY-mmm (e.g., 2026-jul)");
+        throw new Error("employmentHistories endDate must be in format YYYY-MM (e.g., 2026-07)");
       }
       const idx = (req.body.employmentHistories as any[]).findIndex((e) => e.endDate === value);
       const startRaw = (req.body.employmentHistories as any[])[idx]?.startDate;
       if (startRaw && isValidMonthYearString(startRaw)) {
-        const startCap = startRaw.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-        const endCap = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
-        if (dayjs(endCap, "YYYY-MMM", true).isBefore(dayjs(startCap, "YYYY-MMM", true))) {
+        if (dayjs(value, "YYYY-MM", true).isBefore(dayjs(startRaw, "YYYY-MM", true))) {
           throw new Error("employmentHistories endDate must be greater than or equal to startDate");
         }
       }
@@ -443,10 +428,9 @@ export const createUserValidator: ValidationChain[] = [
     .withMessage("dateOfBirth is required")
     .custom((value) => {
       if (!isValidFullDateString(value)) {
-        throw new Error("dateOfBirth must be in format YYYY-mmm-DD (e.g., 2026-jul-02)");
+        throw new Error("dateOfBirth must be in format YYYY-MM-DD (e.g., 2026-07-02)");
       }
-      const normalized = value.replace(/-([a-z]{3})-/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}-`);
-      if (dayjs(normalized, "YYYY-MMM-DD", true).isAfter(dayjs())) {
+      if (dayjs(value, "YYYY-MM-DD", true).isAfter(dayjs())) {
         throw new Error("dateOfBirth must not be in the future");
       }
       return true;
@@ -550,10 +534,9 @@ export const updateUserValidator: ValidationChain[] = [
     .withMessage("dateOfBirth is required")
     .custom((value) => {
       if (!isValidFullDateString(value)) {
-        throw new Error("dateOfBirth must be in format YYYY-mmm-DD (e.g., 2026-jul-02)");
+        throw new Error("dateOfBirth must be in format YYYY-MM-DD (e.g., 2026-07-02)");
       }
-      const normalized = value.replace(/-([a-z]{3})-/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}-`);
-      if (dayjs(normalized, "YYYY-MMM-DD", true).isAfter(dayjs())) {
+      if (dayjs(value, "YYYY-MM-DD", true).isAfter(dayjs())) {
         throw new Error("dateOfBirth must not be in the future");
       }
       return true;
