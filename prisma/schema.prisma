@@ -62,8 +62,8 @@ model Education {
   id          String    @id @default(uuid()) @db.VarChar(36)
   school      String    @db.VarChar(255)
   degree      String    @db.VarChar(255)
-  startDate   DateTime  @db.Date
-  endDate     DateTime? @db.Date
+  startDate   String    @db.VarChar(8)
+  endDate     String?   @db.VarChar(8)
   city        String    @db.VarChar(255)
   description String    @db.Text
   userId      String    @db.VarChar(36)
@@ -76,8 +76,8 @@ model EmploymentHistory {
   id          String    @id @default(uuid()) @db.VarChar(36)
   jobTitle    String    @db.VarChar(255)
   employer    String    @db.VarChar(255)
-  startDate   DateTime  @db.Date
-  endDate     DateTime? @db.Date
+  startDate   String    @db.VarChar(8)
+  endDate     String?   @db.VarChar(8)
   city        String    @db.VarChar(255)
   description String    @db.Text
   userId      String    @db.VarChar(36)

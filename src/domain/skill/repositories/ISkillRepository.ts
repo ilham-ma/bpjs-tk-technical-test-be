@@ -6,6 +6,6 @@ export interface ISkillRepository {
   findAll(): Promise<Skill[]>;
   findById(id: string): Promise<Skill | null>;
   findManyByIds(ids: string[]): Promise<Skill[]>;
-  linkUserSkills(userId: string, skillIds: string[]): Promise<Skill[]>;
+  syncUserSkills(userId: string, skills: SkillInputDTO[]): Promise<Skill[]>;
   findByUserId(userId: string): Promise<Skill[]>;
 }

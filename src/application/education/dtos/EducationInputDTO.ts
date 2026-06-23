@@ -1,8 +1,9 @@
 export type EducationInputDTO = {
+  id?: string;
   school: string;
   degree: string;
-  startDate: Date;
-  endDate?: Date | null;
+  startDate: string;
+  endDate?: string | null;
   city: string;
   description: string;
 };

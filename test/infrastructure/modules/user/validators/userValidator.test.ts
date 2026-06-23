@@ -22,16 +22,16 @@ describe("userValidator", () => {
     drivingLicense: "DL123456",
     nationality: "Indonesian",
     placeOfBirth: "Jakarta",
-    dateOfBirth: "1990-01-15",
+    dateOfBirth: "1990-jan-15",
     photoUrl: "/photos/john.jpg",
     professionalSummary: "Experienced backend engineer",
-    skills: ["550e8400-e29b-41d4-a716-446655440001"],
+    skills: [{ name: "TypeScript", level: "Expert" }],
     educations: [
       {
         school: "University of Technology",
         degree: "Bachelor of Computer Science",
-        startDate: "2018-09-01",
-        endDate: "2022-06-15",
+        startDate: "2018-sep",
+        endDate: "2022-jun",
         city: "Bandung",
         description: "Studied computer science fundamentals",
       },
@@ -40,7 +40,7 @@ describe("userValidator", () => {
       {
         jobTitle: "Software Engineer",
         employer: "Tech Corp",
-        startDate: "2022-07-01",
+        startDate: "2022-jul",
         endDate: null,
         city: "Jakarta",
         description: "Developing backend systems",
@@ -141,12 +141,8 @@ describe("userValidator", () => {
     });
 
     it("should fail when dateOfBirth is in the future", async () => {
-      const futureDate = new Date();
-      futureDate.setFullYear(futureDate.getFullYear() + 1);
-      const futureDateString = futureDate.toISOString().split("T")[0];
-
       const req = {
-        body: { ...validUserData, dateOfBirth: futureDateString },
+        body: { ...validUserData, dateOfBirth: "2099-dec-31" },
       } as any;
 
       for (const validator of createUserValidator) {
@@ -173,7 +169,7 @@ describe("userValidator", () => {
       expect(errors.isEmpty()).toBe(false);
       const errs = errors.array() as any[];
       const dateError = errs.find((e) => e.path === "dateOfBirth");
-      expect(dateError?.msg).toContain("ISO 8601");
+      expect(dateError?.msg).toContain("YYYY-mmm-DD");
     });
 
     it("should trim whitespace from string fields", async () => {
@@ -228,11 +224,11 @@ describe("userValidator", () => {
       expect(skillsError?.msg).toContain("at least 1 item");
     });
 
-    it("should fail when skills[] contains invalid UUID", async () => {
+    it("should fail when skill missing name", async () => {
       const req = {
         body: {
           ...validUserData,
-          skills: ["not-a-uuid"],
+          skills: [{ level: "Expert" }],
         },
       } as any;
 
@@ -244,17 +240,16 @@ describe("userValidator", () => {
       expect(errors.isEmpty()).toBe(false);
       const errs = errors.array() as any[];
       const skillError = errs.find((e) => e.path === "skills[0]");
-      expect(skillError?.msg).toContain("valid UUID");
+      expect(skillError?.msg).toContain("skill name is required");
     });
 
-    it("should pass with valid skill UUIDs", async () => {
-      const validSkillIds = [
-        "550e8400-e29b-41d4-a716-446655440001",
-        "550e8400-e29b-41d4-a716-446655440002",
-        "550e8400-e29b-41d4-a716-446655440003",
+    it("should pass with valid skills", async () => {
+      const validSkills = [
+        { name: "TypeScript", level: "Expert" },
+        { name: "Python", level: "Intermediate" },
       ];
       const req = {
-        body: { ...validUserData, skills: validSkillIds },
+        body: { ...validUserData, skills: validSkills },
       } as any;
 
       for (const validator of createUserValidator) {
@@ -327,10 +322,6 @@ describe("userValidator", () => {
     });
 
     it("should fail when educations[].startDate is in the future", async () => {
-      const futureDate = new Date();
-      futureDate.setFullYear(futureDate.getFullYear() + 1);
-      const futureDateString = futureDate.toISOString().split("T")[0];
-
       const req = {
         body: {
           ...validUserData,
@@ -338,8 +329,8 @@ describe("userValidator", () => {
             {
               school: "University",
               degree: "Bachelor",
-              startDate: futureDateString,
-              endDate: "2022-06-15",
+              startDate: "2099-dec",
+              endDate: "2022-jun",
               city: "Jakarta",
               description: "Bachelor program",
             },
@@ -366,8 +357,8 @@ describe("userValidator", () => {
             {
               school: "University",
               degree: "Bachelor",
-              startDate: "2022-06-15",
-              endDate: "2018-09-01",
+              startDate: "2022-jun",
+              endDate: "2018-sep",
               city: "Jakarta",
               description: "Bachelor program",
             },
@@ -394,7 +385,7 @@ describe("userValidator", () => {
             {
               school: "Current University",
               degree: "Master",
-              startDate: "2022-09-01",
+              startDate: "2022-sep",
               endDate: null,
               city: "Jakarta",
               description: "Master program",
@@ -416,15 +407,15 @@ describe("userValidator", () => {
         {
           school: "State University",
           degree: "Bachelor of Science",
-          startDate: "2018-09-01",
-          endDate: "2022-06-15",
+          startDate: "2018-sep",
+          endDate: "2022-jun",
           city: "Jakarta",
           description: "Bachelor of Science program",
         },
         {
           school: "Advanced Institute",
           degree: "Master of Science",
-          startDate: "2022-09-01",
+          startDate: "2022-sep",
           endDate: null,
           city: "Bandung",
           description: "Master of Science program",
@@ -514,12 +505,12 @@ describe("userValidator", () => {
     });
 
     it("should pass with valid skills on update", async () => {
-      const validSkillIds = [
-        "550e8400-e29b-41d4-a716-446655440001",
-        "550e8400-e29b-41d4-a716-446655440002",
+      const validSkills = [
+        { id: "550e8400-e29b-41d4-a716-446655440001", name: "TypeScript", level: "Expert" },
+        { name: "Python", level: "Intermediate" },
       ];
       const req = {
-        body: { ...validUserData, skills: validSkillIds },
+        body: { ...validUserData, skills: validSkills },
       } as any;
 
       for (const validator of updateUserValidator) {
@@ -564,7 +555,7 @@ describe("userValidator", () => {
         {
           school: "Updated University",
           degree: "Master",
-          startDate: "2020-09-01",
+          startDate: "2020-sep",
           endDate: null,
           city: "Jakarta",
           description: "Master degree program",
@@ -586,7 +577,9 @@ describe("userValidator", () => {
   describe("handleValidationError", () => {
     it("should call next if no errors", async () => {
       const req = { body: validUserData } as any;
-      const res = {} as any;
+      const res = {
+        status: () => ({ json: () => {} }),
+      } as any;
       let nextCalled = false;
 
       for (const validator of createUserValidator) {

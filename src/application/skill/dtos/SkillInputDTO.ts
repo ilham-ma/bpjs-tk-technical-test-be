@@ -1,6 +1,7 @@
 import { SkillLevel } from '../../../domain/skill/entities/SkillLevel';
 
 export type SkillInputDTO = {
-  name: string;
-  level: SkillLevel;
+  id?: string;
+  name?: string;
+  level?: SkillLevel;
 };

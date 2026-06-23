@@ -108,7 +108,7 @@ describe("UserController", () => {
           drivingLicense: "DL123456",
           nationality: "Indonesian",
           placeOfBirth: "Jakarta",
-          dateOfBirth: "1990-01-15",
+          dateOfBirth: "1990-jan-15",
           photoUrl: "/photos/john.jpg",
           professionalSummary: "Experienced backend engineer",
           skills: [{ name: "TypeScript", level: "Expert" }],
@@ -116,8 +116,8 @@ describe("UserController", () => {
             {
               school: "University of Technology",
               degree: "Bachelor of Computer Science",
-              startDate: "2018-09-01",
-              endDate: "2022-06-15",
+              startDate: "2018-sep",
+              endDate: "2022-jun",
               city: "Bandung",
               description: "Studied computer science fundamentals",
             },
@@ -158,15 +158,16 @@ describe("UserController", () => {
           drivingLicense: "DL123456",
           nationality: "Indonesian",
           placeOfBirth: "Jakarta",
-          dateOfBirth: "1990-01-15",
+          dateOfBirth: "1990-jan-15",
           photoUrl: "/photos/john-updated.jpg",
           professionalSummary: "Senior backend engineer",
-          skills: [{ name: "React", level: "Intermediate" }],
+          skills: [{ id: "skill-1", name: "React", level: "Intermediate" }],
           educations: [
             {
+              id: "edu-1",
               school: "Advanced Institute",
               degree: "Master of Science",
-              startDate: "2022-09-01",
+              startDate: "2022-sep",
               endDate: null,
               city: "Jakarta",
               description: "Currently pursuing master degree",
@@ -213,7 +214,7 @@ describe("UserController", () => {
           drivingLicense: "DL123456",
           nationality: "Indonesian",
           placeOfBirth: "Jakarta",
-          dateOfBirth: "1990-01-15",
+          dateOfBirth: "1990-jan-15",
           photoUrl: "/photos/john.jpg",
           professionalSummary: "Experienced backend engineer",
           skills: [{ name: "TypeScript", level: "Expert" }],
@@ -221,8 +222,8 @@ describe("UserController", () => {
             {
               school: "University of Technology",
               degree: "Bachelor of Computer Science",
-              startDate: "2018-09-01",
-              endDate: "2022-06-15",
+              startDate: "2018-sep",
+              endDate: "2022-jun",
               city: "Bandung",
               description: "Studied computer science fundamentals",
             },
@@ -245,7 +246,7 @@ describe("UserController", () => {
       expect(next).toHaveBeenCalledWith(error);
     });
 
-    it("should convert dateOfBirth string to Date", async () => {
+    it("should pass dateOfBirth string as-is to service", async () => {
       const req = {
         params: { id: mockUser.id },
         body: {
@@ -261,7 +262,7 @@ describe("UserController", () => {
           drivingLicense: "DL123456",
           nationality: "Indonesian",
           placeOfBirth: "Jakarta",
-          dateOfBirth: "1990-01-15",
+          dateOfBirth: "1990-jan-15",
           photoUrl: "/photos/john.jpg",
           professionalSummary: "Experienced backend engineer",
           skills: [{ name: "TypeScript", level: "Expert" }],
@@ -269,8 +270,8 @@ describe("UserController", () => {
             {
               school: "University of Technology",
               degree: "Bachelor of Computer Science",
-              startDate: "2018-09-01",
-              endDate: "2022-06-15",
+              startDate: "2018-sep",
+              endDate: "2022-jun",
               city: "Bandung",
               description: "Studied computer science fundamentals",
             },
@@ -290,7 +291,7 @@ describe("UserController", () => {
       await userController.update(req, res, next);
 
       const callArgs = vi.mocked(mockUserService.update).mock.calls[0];
-      expect(callArgs[1].dateOfBirth).toBeInstanceOf(Date);
+      expect(callArgs[1].dateOfBirth).toBe(req.body.dateOfBirth);
     });
   });
 
