@@ -23,32 +23,38 @@ function isValidMonthYearString(value: string): boolean {
   return dayjs(value, "YYYY-MM", true).isValid();
 }
 
+const SKILL_LEVELS = ["Basic", "Intermediate", "Skillfull", "Experienced", "Expert"];
+const SKILL_LEVELS_MESSAGE = `skill level must be one of: ${SKILL_LEVELS.join(", ")}`;
+const UUID_V4_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const skillsValidatorRequired: ValidationChain[] = [
   body("skills")
     .isArray({ min: 1 })
     .withMessage("skills must contain at least 1 item"),
-  body("skills.*")
-    .custom((item) => {
-      if (item.id) {
-        throw new Error("skill id must not be provided when creating a new skill");
-      }
-      if (!item.name) {
-        throw new Error("skill name is required");
-      }
-      if (!item.level) {
-        throw new Error("skill level is required");
-      }
-      if (!["Basic", "Intermediate", "Expert"].includes(item.level)) {
-        throw new Error("skill level must be one of: Basic, Intermediate, Expert");
-      }
-      if (typeof item.name !== "string" || item.name.trim().length === 0) {
-        throw new Error("skill name cannot be empty");
-      }
-      if (item.name.length > 255) {
-        throw new Error("skill name must not exceed 255 characters");
-      }
-      return true;
-    }),
+  body("skills.*").custom((item) => {
+    if (!item.id) {
+      throw new Error("skill id is required");
+    }
+    if (typeof item.id !== "string" || !UUID_V4_REGEX.test(item.id)) {
+      throw new Error("skill id must be a valid UUID");
+    }
+    if (!item.name) {
+      throw new Error("skill name is required");
+    }
+    if (!item.level) {
+      throw new Error("skill level is required");
+    }
+    if (!SKILL_LEVELS.includes(item.level)) {
+      throw new Error(SKILL_LEVELS_MESSAGE);
+    }
+    if (typeof item.name !== "string" || item.name.trim().length === 0) {
+      throw new Error("skill name cannot be empty");
+    }
+    if (item.name.length > 255) {
+      throw new Error("skill name must not exceed 255 characters");
+    }
+    return true;
+  }),
 ];
 
 const skillsValidatorOptional: ValidationChain[] = [
@@ -56,43 +62,44 @@ const skillsValidatorOptional: ValidationChain[] = [
     .optional()
     .isArray({ min: 1 })
     .withMessage("skills must contain at least 1 item"),
-  body("skills.*.id")
-    .optional()
-    .isUUID(4)
-    .withMessage("skill id must be a valid UUID"),
-  body("skills.*.name")
-    .optional({ checkFalsy: true })
-    .notEmpty()
-    .withMessage("skill name is required")
-    .trim()
-    .isLength({ max: 255 })
-    .withMessage("skill name must not exceed 255 characters"),
-  body("skills.*.level")
-    .optional({ checkFalsy: true })
-    .notEmpty()
-    .withMessage("skill level is required")
-    .isIn(["Basic", "Intermediate", "Expert"])
-    .withMessage("skill level must be one of: Basic, Intermediate, Expert"),
-  body("skills.*")
-    .custom((item) => {
-      if (!item.id && (!item.name || !item.level)) {
-        throw new Error("skill must have either id or both name and level");
-      }
-      return true;
-    }),
+  body("skills.*").custom((item) => {
+    if (!item.id) {
+      throw new Error("skill id is required");
+    }
+    if (typeof item.id !== "string" || !UUID_V4_REGEX.test(item.id)) {
+      throw new Error("skill id must be a valid UUID");
+    }
+    if (!item.name) {
+      throw new Error("skill name is required");
+    }
+    if (!item.level) {
+      throw new Error("skill level is required");
+    }
+    if (!SKILL_LEVELS.includes(item.level)) {
+      throw new Error(SKILL_LEVELS_MESSAGE);
+    }
+    if (typeof item.name !== "string" || item.name.trim().length === 0) {
+      throw new Error("skill name cannot be empty");
+    }
+    if (item.name.length > 255) {
+      throw new Error("skill name must not exceed 255 characters");
+    }
+    return true;
+  }),
 ];
 
 const educationsValidatorRequired: ValidationChain[] = [
   body("educations")
     .isArray({ min: 1 })
     .withMessage("educations must contain at least 1 item"),
-  body("educations.*")
-    .custom((item) => {
-      if (item.id) {
-        throw new Error("education id must not be provided when creating a new education");
-      }
-      return true;
-    }),
+  body("educations.*").custom((item) => {
+    if (item.id) {
+      throw new Error(
+        "education id must not be provided when creating a new education",
+      );
+    }
+    return true;
+  }),
   body("educations.*.school")
     .notEmpty()
     .withMessage("educations school is required")
@@ -110,7 +117,9 @@ const educationsValidatorRequired: ValidationChain[] = [
     .withMessage("educations startDate is required")
     .custom((value) => {
       if (!isValidMonthYearString(value)) {
-        throw new Error("educations startDate must be in format YYYY-MM (e.g., 2026-07)");
+        throw new Error(
+          "educations startDate must be in format YYYY-MM (e.g., 2026-07)",
+        );
       }
       if (dayjs(value, "YYYY-MM", true).isAfter(dayjs())) {
         throw new Error("educations startDate must not be in the future");
@@ -122,13 +131,23 @@ const educationsValidatorRequired: ValidationChain[] = [
     .custom((value, { req }) => {
       if (value === null || value === undefined || value === "") return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("educations endDate must be in format YYYY-MM (e.g., 2026-07)");
+        throw new Error(
+          "educations endDate must be in format YYYY-MM (e.g., 2026-07)",
+        );
       }
-      const idx = (req.body.educations as any[]).findIndex((e) => e.endDate === value);
+      const idx = (req.body.educations as any[]).findIndex(
+        (e) => e.endDate === value,
+      );
       const startRaw = (req.body.educations as any[])[idx]?.startDate;
       if (startRaw && isValidMonthYearString(startRaw)) {
-        if (dayjs(value, "YYYY-MM", true).isBefore(dayjs(startRaw, "YYYY-MM", true))) {
-          throw new Error("educations endDate must be greater than or equal to startDate");
+        if (
+          dayjs(value, "YYYY-MM", true).isBefore(
+            dayjs(startRaw, "YYYY-MM", true),
+          )
+        ) {
+          throw new Error(
+            "educations endDate must be greater than or equal to startDate",
+          );
         }
       }
       return true;
@@ -175,7 +194,9 @@ const educationsValidatorOptional: ValidationChain[] = [
     .custom((value) => {
       if (!value) return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("educations startDate must be in format YYYY-MM (e.g., 2026-07)");
+        throw new Error(
+          "educations startDate must be in format YYYY-MM (e.g., 2026-07)",
+        );
       }
       if (dayjs(value, "YYYY-MM", true).isAfter(dayjs())) {
         throw new Error("educations startDate must not be in the future");
@@ -187,13 +208,23 @@ const educationsValidatorOptional: ValidationChain[] = [
     .custom((value, { req }) => {
       if (!value) return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("educations endDate must be in format YYYY-MM (e.g., 2026-07)");
+        throw new Error(
+          "educations endDate must be in format YYYY-MM (e.g., 2026-07)",
+        );
       }
-      const idx = (req.body.educations as any[]).findIndex((e) => e.endDate === value);
+      const idx = (req.body.educations as any[]).findIndex(
+        (e) => e.endDate === value,
+      );
       const startRaw = (req.body.educations as any[])[idx]?.startDate;
       if (startRaw && isValidMonthYearString(startRaw)) {
-        if (dayjs(value, "YYYY-MM", true).isBefore(dayjs(startRaw, "YYYY-MM", true))) {
-          throw new Error("educations endDate must be greater than or equal to startDate");
+        if (
+          dayjs(value, "YYYY-MM", true).isBefore(
+            dayjs(startRaw, "YYYY-MM", true),
+          )
+        ) {
+          throw new Error(
+            "educations endDate must be greater than or equal to startDate",
+          );
         }
       }
       return true;
@@ -218,13 +249,14 @@ const employmentHistoriesValidatorRequired: ValidationChain[] = [
   body("employmentHistories")
     .isArray({ min: 1 })
     .withMessage("employmentHistories must contain at least 1 item"),
-  body("employmentHistories.*")
-    .custom((item) => {
-      if (item.id) {
-        throw new Error("employment history id must not be provided when creating a new employment history");
-      }
-      return true;
-    }),
+  body("employmentHistories.*").custom((item) => {
+    if (item.id) {
+      throw new Error(
+        "employment history id must not be provided when creating a new employment history",
+      );
+    }
+    return true;
+  }),
   body("employmentHistories.*.jobTitle")
     .notEmpty()
     .withMessage("employmentHistories jobTitle is required")
@@ -242,10 +274,14 @@ const employmentHistoriesValidatorRequired: ValidationChain[] = [
     .withMessage("employmentHistories startDate is required")
     .custom((value) => {
       if (!isValidMonthYearString(value)) {
-        throw new Error("employmentHistories startDate must be in format YYYY-MM (e.g., 2026-07)");
+        throw new Error(
+          "employmentHistories startDate must be in format YYYY-MM (e.g., 2026-07)",
+        );
       }
       if (dayjs(value, "YYYY-MM", true).isAfter(dayjs())) {
-        throw new Error("employmentHistories startDate must not be in the future");
+        throw new Error(
+          "employmentHistories startDate must not be in the future",
+        );
       }
       return true;
     }),
@@ -254,13 +290,23 @@ const employmentHistoriesValidatorRequired: ValidationChain[] = [
     .custom((value, { req }) => {
       if (value === null || value === undefined || value === "") return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("employmentHistories endDate must be in format YYYY-MM (e.g., 2026-07)");
+        throw new Error(
+          "employmentHistories endDate must be in format YYYY-MM (e.g., 2026-07)",
+        );
       }
-      const idx = (req.body.employmentHistories as any[]).findIndex((e) => e.endDate === value);
+      const idx = (req.body.employmentHistories as any[]).findIndex(
+        (e) => e.endDate === value,
+      );
       const startRaw = (req.body.employmentHistories as any[])[idx]?.startDate;
       if (startRaw && isValidMonthYearString(startRaw)) {
-        if (dayjs(value, "YYYY-MM", true).isBefore(dayjs(startRaw, "YYYY-MM", true))) {
-          throw new Error("employmentHistories endDate must be greater than or equal to startDate");
+        if (
+          dayjs(value, "YYYY-MM", true).isBefore(
+            dayjs(startRaw, "YYYY-MM", true),
+          )
+        ) {
+          throw new Error(
+            "employmentHistories endDate must be greater than or equal to startDate",
+          );
         }
       }
       return true;
@@ -307,10 +353,14 @@ const employmentHistoriesValidatorOptional: ValidationChain[] = [
     .custom((value) => {
       if (!value) return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("employmentHistories startDate must be in format YYYY-MM (e.g., 2026-07)");
+        throw new Error(
+          "employmentHistories startDate must be in format YYYY-MM (e.g., 2026-07)",
+        );
       }
       if (dayjs(value, "YYYY-MM", true).isAfter(dayjs())) {
-        throw new Error("employmentHistories startDate must not be in the future");
+        throw new Error(
+          "employmentHistories startDate must not be in the future",
+        );
       }
       return true;
     }),
@@ -319,13 +369,23 @@ const employmentHistoriesValidatorOptional: ValidationChain[] = [
     .custom((value, { req }) => {
       if (!value) return true;
       if (!isValidMonthYearString(value)) {
-        throw new Error("employmentHistories endDate must be in format YYYY-MM (e.g., 2026-07)");
+        throw new Error(
+          "employmentHistories endDate must be in format YYYY-MM (e.g., 2026-07)",
+        );
       }
-      const idx = (req.body.employmentHistories as any[]).findIndex((e) => e.endDate === value);
+      const idx = (req.body.employmentHistories as any[]).findIndex(
+        (e) => e.endDate === value,
+      );
       const startRaw = (req.body.employmentHistories as any[])[idx]?.startDate;
       if (startRaw && isValidMonthYearString(startRaw)) {
-        if (dayjs(value, "YYYY-MM", true).isBefore(dayjs(startRaw, "YYYY-MM", true))) {
-          throw new Error("employmentHistories endDate must be greater than or equal to startDate");
+        if (
+          dayjs(value, "YYYY-MM", true).isBefore(
+            dayjs(startRaw, "YYYY-MM", true),
+          )
+        ) {
+          throw new Error(
+            "employmentHistories endDate must be greater than or equal to startDate",
+          );
         }
       }
       return true;
@@ -428,7 +488,9 @@ export const createUserValidator: ValidationChain[] = [
     .withMessage("dateOfBirth is required")
     .custom((value) => {
       if (!isValidFullDateString(value)) {
-        throw new Error("dateOfBirth must be in format YYYY-MM-DD (e.g., 2026-07-02)");
+        throw new Error(
+          "dateOfBirth must be in format YYYY-MM-DD (e.g., 2026-07-02)",
+        );
       }
       if (dayjs(value, "YYYY-MM-DD", true).isAfter(dayjs())) {
         throw new Error("dateOfBirth must not be in the future");
@@ -534,7 +596,9 @@ export const updateUserValidator: ValidationChain[] = [
     .withMessage("dateOfBirth is required")
     .custom((value) => {
       if (!isValidFullDateString(value)) {
-        throw new Error("dateOfBirth must be in format YYYY-MM-DD (e.g., 2026-07-02)");
+        throw new Error(
+          "dateOfBirth must be in format YYYY-MM-DD (e.g., 2026-07-02)",
+        );
       }
       if (dayjs(value, "YYYY-MM-DD", true).isAfter(dayjs())) {
         throw new Error("dateOfBirth must not be in the future");

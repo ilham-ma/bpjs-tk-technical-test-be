@@ -6,8 +6,8 @@ export class SkillController {
 
   create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const skill = await this.skillService.create(req.body);
-      res.status(201).json({ status: "success", data: skill });
+      const skills = await this.skillService.createMany(req.body);
+      res.status(201).json({ status: "success", data: skills });
     } catch (err) {
       next(err);
     }
