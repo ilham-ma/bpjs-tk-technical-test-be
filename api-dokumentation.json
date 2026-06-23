@@ -1,0 +1,195 @@
+{
+  "info": {
+    "name": "BPJS TK Technical Test Backend API",
+    "description": "API documentation untuk BPJS TK Technical Test Backend. Berisi endpoint User (CRUD) dan Profile (upload/download foto).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "filename",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "User",
+      "description": "Endpoint manajemen user (CV/profil pelamar).",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user"]
+            },
+            "description": "Mengambil seluruh data user beserta relasi (skills, educations, employmentHistories)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/user/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "{{userId}}"]
+            },
+            "description": "Mengambil user berdasarkan UUID. Path param `id` harus berupa UUID v4."
+          },
+          "response": []
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"wantedJobTitle\": \"Web Developer\",\n  \"firstName\": \"Ilham\",\n  \"lastName\": \"Maulana\",\n  \"email\": \"ilhamaulana13@gmail.com\",\n  \"phone\": \"082215143455\",\n  \"country\": \"Indonesia\",\n  \"city\": \"Bandung\",\n  \"address\": \"Bandung\",\n  \"postalCode\": \"40168\",\n  \"drivingLicense\": \"1234567890\",\n  \"nationality\": \"Indonesia\",\n  \"placeOfBirth\": \"Brebes\",\n  \"dateOfBirth\": \"2000-08-23\",\n  \"photoUrl\": \"12123c49-e13d-4c95-a80f-62f6e997bb17.jpg\",\n  \"professionalSummary\": \"<p style=\\\"font-size: 16px;\\\">Testing</p>\",\n  \"skills\": [\n    {\n      \"name\": \"vuejs\",\n      \"level\": \"Basic\"\n    }\n  ],\n  \"educations\": [\n    {\n      \"school\": \"Telkom University\",\n      \"degree\": \"S1\",\n      \"city\": \"bandung\",\n      \"description\": \"<p style=\\\"font-size: 16px;\\\">bandung</p>\",\n      \"startDate\": \"2026-01\",\n      \"endDate\": \"2026-06\"\n    }\n  ],\n  \"employmentHistories\": [\n    {\n      \"jobTitle\": \"Testing\",\n      \"employer\": \"PT Coba\",\n      \"city\": \"Jakarta\",\n      \"description\": \"<p style=\\\"font-size: 16px;\\\">Testing</p>\",\n      \"startDate\": \"2026-01\",\n      \"endDate\": \"2026-06\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user"]
+            },
+            "description": "Membuat user baru.\n\n**Catatan format tanggal:**\n- `dateOfBirth`: format `YYYY-MM-DD` (contoh: `2000-08-23`)\n- `educations[*].startDate`/`endDate` dan `employmentHistories[*].startDate`/`endDate`: format `YYYY-MM` (contoh: `2026-01`)\n- `endDate` boleh `null` (masih berjalan).\n\n**Field constraints:**\n- `email` harus valid email & unique\n- `phone` hanya digit (boleh diawali `+`), max 14 char\n- `postalCode` hanya digit, max 6 char\n- `skills[*].level` salah satu: `Basic`, `Intermediate`, `Expert`\n- Saat create, `id` pada item skills/educations/employmentHistories TIDAK boleh dikirim."
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"wantedJobTitle\": \"Senior Web Developer\",\n  \"firstName\": \"Ilham\",\n  \"lastName\": \"Maulana\",\n  \"email\": \"ilhamaulana13@gmail.com\",\n  \"phone\": \"082215143455\",\n  \"country\": \"Indonesia\",\n  \"city\": \"Bandung\",\n  \"address\": \"Bandung\",\n  \"postalCode\": \"40168\",\n  \"drivingLicense\": \"1234567890\",\n  \"nationality\": \"Indonesia\",\n  \"placeOfBirth\": \"Brebes\",\n  \"dateOfBirth\": \"2000-08-23\",\n  \"photoUrl\": \"12123c49-e13d-4c95-a80f-62f6e997bb17.jpg\",\n  \"professionalSummary\": \"<p style=\\\"font-size: 16px;\\\">Updated summary</p>\",\n  \"skills\": [\n    {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"name\": \"vuejs\",\n      \"level\": \"Intermediate\"\n    },\n    {\n      \"name\": \"react\",\n      \"level\": \"Basic\"\n    }\n  ],\n  \"educations\": [\n    {\n      \"school\": \"Telkom University\",\n      \"degree\": \"S1\",\n      \"city\": \"bandung\",\n      \"description\": \"<p style=\\\"font-size: 16px;\\\">bandung</p>\",\n      \"startDate\": \"2020-09\",\n      \"endDate\": \"2024-06\"\n    }\n  ],\n  \"employmentHistories\": [\n    {\n      \"jobTitle\": \"Web Developer\",\n      \"employer\": \"PT Coba\",\n      \"city\": \"Jakarta\",\n      \"description\": \"<p style=\\\"font-size: 16px;\\\">Updated</p>\",\n      \"startDate\": \"2024-07\",\n      \"endDate\": null\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/user/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "user", "{{userId}}"]
+            },
+            "description": "Memperbarui user berdasarkan UUID.\n\n**Catatan update relasi:**\n- Untuk `skills`: item dengan `id` (UUID) akan di-link ke skill yang sudah ada, item tanpa `id` akan dibuat baru.\n- Untuk `educations` & `employmentHistories`: array akan di-replace dengan data yang dikirim.\n- Field array (`skills`, `educations`, `employmentHistories`) bersifat opsional pada update — jika tidak dikirim, relasi tidak diubah."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "description": "Endpoint upload & download foto profil.",
+      "item": [
+        {
+          "name": "Upload Photo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "photo",
+                  "type": "file",
+                  "src": [],
+                  "description": "File foto (jpeg/png/gif/webp), maksimal 2MB."
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/profile/upload",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "profile", "upload"]
+            },
+            "description": "Upload foto profil dengan multipart/form-data.\n\n**Constraints:**\n- Field name: `photo`\n- Mime type yang diizinkan: `image/jpeg`, `image/png`, `image/gif`, `image/webp`\n- Maksimum 2MB\n\nResponse mengembalikan `filename` yang dapat digunakan pada field `photoUrl` saat create/update user."
+          },
+          "response": []
+        },
+        {
+          "name": "Download / View Photo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/profile/{{filename}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "profile", "{{filename}}"]
+            },
+            "description": "Mengambil file foto berdasarkan filename (hasil dari endpoint upload)."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Skill",
+      "description": "Endpoint master data skill.",
+      "item": [
+        {
+          "name": "Get All Skills",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/skill",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "skill"]
+            },
+            "description": "Mengambil seluruh master data skill."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Skill",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"vuejs\",\n  \"level\": \"Basic\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/skill",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "skill"]
+            },
+            "description": "Membuat master skill baru.\n\n**Field constraints:**\n- `name`: wajib, max 255 char\n- `level`: salah satu dari `Basic`, `Intermediate`, `Expert`"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
