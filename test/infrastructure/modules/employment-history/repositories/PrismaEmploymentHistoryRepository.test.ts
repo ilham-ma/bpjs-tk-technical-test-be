@@ -7,6 +7,8 @@ vi.mock("../../../../../src/infrastructure/database/prisma/client", () => ({
     employmentHistory: {
       deleteMany: vi.fn(),
       createMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
       findMany: vi.fn(),
     },
     $transaction: vi.fn(),
@@ -50,214 +52,199 @@ describe("PrismaEmploymentHistoryRepository", () => {
     vi.mocked(prisma.$transaction).mockResolvedValue([null, null]);
   });
 
-  describe("replaceForUser", () => {
-    it("should call deleteMany with correct userId inside transaction", async () => {
-      vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue(mockEmploymentHistories);
-
-      await repository.replaceForUser(userId, [
+  describe("syncForUser", () => {
+    it("should create new employment histories when id is not provided", async () => {
+      const input: EmploymentHistoryInputDTO[] = [
         {
           jobTitle: "Senior Software Engineer",
           employer: "Tech Company A",
-          startDate: new Date("2020-01-15"),
-          endDate: new Date("2023-06-30"),
+          startDate: "2020-jan",
+          endDate: "2023-jun",
           city: "Jakarta",
           description: "Developed backend systems and APIs",
         },
-      ]);
+      ];
 
-      expect(prisma.employmentHistory.deleteMany).toHaveBeenCalledWith({
-        where: { userId },
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          employmentHistory: {
+            findMany: vi.fn().mockResolvedValue([]),
+            create: vi.fn().mockResolvedValue(mockEmploymentHistories[0]),
+            update: vi.fn(),
+            deleteMany: vi.fn(),
+          },
+        };
+        await callback(tx);
       });
+
+      vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue([mockEmploymentHistories[0]]);
+
+      const result = await repository.syncForUser(userId, input);
+
+      expect(result).toHaveLength(1);
     });
 
-    it("should call createMany with employment histories mapped to include userId", async () => {
-      const inputs: Omit<EmploymentHistory, 'id' | 'userId'>[] = [
+    it("should update existing employment histories when id is provided", async () => {
+      const input: EmploymentHistoryInputDTO[] = [
         {
+          id: mockEmploymentHistories[0].id,
+          jobTitle: "Updated Position",
+          employer: "Tech Company A",
+          startDate: "2020-jan",
+          endDate: "2023-jun",
+          city: "Jakarta",
+          description: "Updated description",
+        },
+      ];
+
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          employmentHistory: {
+            findMany: vi.fn().mockResolvedValue([{ id: mockEmploymentHistories[0].id }]),
+            update: vi.fn(),
+            deleteMany: vi.fn(),
+          },
+        };
+        await callback(tx);
+      });
+
+      vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue([mockEmploymentHistories[0]]);
+
+      const result = await repository.syncForUser(userId, input);
+
+      expect(result).toHaveLength(1);
+    });
+
+    it("should throw error if employment history id does not belong to user", async () => {
+      const input: EmploymentHistoryInputDTO[] = [
+        {
+          id: "non-existent-id",
           jobTitle: "Senior Software Engineer",
           employer: "Tech Company A",
-          startDate: new Date("2020-01-15"),
-          endDate: new Date("2023-06-30"),
+          startDate: "2020-jan",
+          endDate: "2023-jun",
+          city: "Jakarta",
+          description: "Developed backend systems and APIs",
+        },
+      ];
+
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          employmentHistory: {
+            findMany: vi.fn().mockResolvedValue([]),
+          },
+        };
+        try {
+          await callback(tx);
+        } catch (err) {
+          throw err;
+        }
+      });
+
+      await expect(repository.syncForUser(userId, input))
+        .rejects.toThrow("does not belong to this user");
+    });
+
+    it("should delete employment histories not in the payload", async () => {
+      const empId1 = mockEmploymentHistories[0].id;
+      const empId2 = mockEmploymentHistories[1].id;
+
+      const input: EmploymentHistoryInputDTO[] = [
+        {
+          id: empId1,
+          jobTitle: "Senior Software Engineer",
+          employer: "Tech Company A",
+          startDate: "2020-jan",
+          endDate: "2023-jun",
+          city: "Jakarta",
+          description: "Developed backend systems and APIs",
+        },
+      ];
+
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          employmentHistory: {
+            findMany: vi.fn().mockResolvedValue([{ id: empId1 }, { id: empId2 }]),
+            update: vi.fn(),
+            deleteMany: vi.fn(),
+          },
+        };
+        await callback(tx);
+        expect(tx.employmentHistory.deleteMany).toHaveBeenCalledWith({
+          where: { userId, id: { notIn: [empId1] } },
+        });
+      });
+
+      vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue([mockEmploymentHistories[0]]);
+
+      await repository.syncForUser(userId, input);
+    });
+
+    it("should handle mixed create and update", async () => {
+      const input: EmploymentHistoryInputDTO[] = [
+        {
+          id: mockEmploymentHistories[0].id,
+          jobTitle: "Senior Software Engineer",
+          employer: "Tech Company A",
+          startDate: "2020-jan",
+          endDate: "2023-jun",
           city: "Jakarta",
           description: "Developed backend systems and APIs",
         },
         {
           jobTitle: "Software Engineer",
           employer: "Tech Company B",
-          startDate: new Date("2018-03-01"),
+          startDate: "2018-mar",
           endDate: null,
           city: "Bandung",
           description: "Full stack development",
         },
       ];
 
-      vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue(mockEmploymentHistories);
-
-      await repository.replaceForUser(userId, inputs);
-
-      expect(prisma.employmentHistory.createMany).toHaveBeenCalledWith({
-        data: [
-          {
-            jobTitle: "Senior Software Engineer",
-            employer: "Tech Company A",
-            startDate: new Date("2020-01-15"),
-            endDate: new Date("2023-06-30"),
-            city: "Jakarta",
-            description: "Developed backend systems and APIs",
-            userId,
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          employmentHistory: {
+            findMany: vi.fn().mockResolvedValue([{ id: mockEmploymentHistories[0].id }]),
+            update: vi.fn(),
+            create: vi.fn().mockResolvedValue(mockEmploymentHistories[1]),
+            deleteMany: vi.fn(),
           },
-          {
-            jobTitle: "Software Engineer",
-            employer: "Tech Company B",
-            startDate: new Date("2018-03-01"),
-            endDate: null,
-            city: "Bandung",
-            description: "Full stack development",
-            userId,
-          },
-        ],
+        };
+        await callback(tx);
       });
-    });
 
-    it("should wrap deleteMany and createMany inside a single transaction", async () => {
-      const inputs: Omit<EmploymentHistory, 'id' | 'userId'>[] = [
-        {
-          jobTitle: "Project Manager",
-          employer: "Project Company",
-          startDate: new Date("2019-05-01"),
-          endDate: new Date("2021-12-31"),
-          city: "Surabaya",
-          description: "Managed team projects",
-        },
-      ];
-
-      vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue([]);
-
-      await repository.replaceForUser(userId, inputs);
-
-      const transactionArg = vi.mocked(prisma.$transaction).mock.calls[0][0];
-      expect(Array.isArray(transactionArg)).toBe(true);
-      expect((transactionArg as any[]).length).toBe(2);
-    });
-
-    it("should return employment histories fetched after transaction completes", async () => {
       vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue(mockEmploymentHistories);
 
-      const result = await repository.replaceForUser(userId, [
-        {
-          jobTitle: "Senior Software Engineer",
-          employer: "Tech Company A",
-          startDate: new Date("2020-01-15"),
-          endDate: new Date("2023-06-30"),
-          city: "Jakarta",
-          description: "Developed backend systems and APIs",
-        },
-      ]);
+      const result = await repository.syncForUser(userId, input);
 
-      expect(prisma.employmentHistory.findMany).toHaveBeenCalledWith({ where: { userId } });
-      expect(result).toEqual(mockEmploymentHistories);
+      expect(result).toHaveLength(2);
     });
+  });
 
-    it("should call createMany with empty data when items array is empty", async () => {
-      vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue([]);
+  describe("findIdsByUserId", () => {
+    it("should return employment history ids for user", async () => {
+      const empId1 = mockEmploymentHistories[0].id;
+      const empId2 = mockEmploymentHistories[1].id;
+      vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue([
+        { id: empId1 },
+        { id: empId2 },
+      ] as any);
 
-      const result = await repository.replaceForUser(userId, []);
+      const result = await repository.findIdsByUserId(userId);
 
-      expect(prisma.employmentHistory.createMany).toHaveBeenCalledWith({ data: [] });
-      expect(result).toEqual([]);
-    });
-
-    it("should still call deleteMany even when items array is empty", async () => {
-      vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue([]);
-
-      await repository.replaceForUser(userId, []);
-
-      expect(prisma.employmentHistory.deleteMany).toHaveBeenCalledWith({
+      expect(result).toEqual([empId1, empId2]);
+      expect(prisma.employmentHistory.findMany).toHaveBeenCalledWith({
         where: { userId },
+        select: { id: true },
       });
     });
 
-    it("should handle null endDate correctly", async () => {
-      const inputs: Omit<EmploymentHistory, 'id' | 'userId'>[] = [
-        {
-          jobTitle: "Current Position",
-          employer: "Current Company",
-          startDate: new Date("2023-07-01"),
-          endDate: null,
-          city: "Jakarta",
-          description: "Currently employed",
-        },
-      ];
+    it("should return empty array when user has no employment histories", async () => {
+      vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue([]);
 
-      const expectedEmploymentHistories: EmploymentHistory[] = [
-        {
-          id: "550e8400-e29b-41d4-a716-446655440003",
-          jobTitle: "Current Position",
-          employer: "Current Company",
-          startDate: new Date("2023-07-01"),
-          endDate: null,
-          city: "Jakarta",
-          description: "Currently employed",
-          userId,
-        },
-      ];
+      const result = await repository.findIdsByUserId(userId);
 
-      vi.mocked(prisma.employmentHistory.findMany).mockResolvedValue(expectedEmploymentHistories);
-
-      const result = await repository.replaceForUser(userId, inputs);
-
-      expect(prisma.employmentHistory.createMany).toHaveBeenCalledWith({
-        data: [
-          {
-            jobTitle: "Current Position",
-            employer: "Current Company",
-            startDate: new Date("2023-07-01"),
-            endDate: null,
-            city: "Jakarta",
-            description: "Currently employed",
-            userId,
-          },
-        ],
-      });
-      expect(result).toEqual(expectedEmploymentHistories);
-    });
-
-    it("should propagate error when transaction fails", async () => {
-      vi.mocked(prisma.$transaction).mockRejectedValue(
-        new Error("Transaction failed"),
-      );
-
-      await expect(
-        repository.replaceForUser(userId, [
-          {
-            jobTitle: "Software Engineer",
-            employer: "Company",
-            startDate: new Date("2020-01-01"),
-            endDate: new Date("2023-01-01"),
-            city: "Jakarta",
-            description: "Worked here",
-          },
-        ]),
-      ).rejects.toThrow("Transaction failed");
-    });
-
-    it("should propagate error when findMany after transaction fails", async () => {
-      vi.mocked(prisma.$transaction).mockResolvedValue([null, null]);
-      vi.mocked(prisma.employmentHistory.findMany).mockRejectedValue(
-        new Error("Database error"),
-      );
-
-      await expect(
-        repository.replaceForUser(userId, [
-          {
-            jobTitle: "Software Engineer",
-            employer: "Company",
-            startDate: new Date("2020-01-01"),
-            endDate: new Date("2023-01-01"),
-            city: "Jakarta",
-            description: "Worked here",
-          },
-        ]),
-      ).rejects.toThrow("Database error");
+      expect(result).toEqual([]);
     });
   });
 

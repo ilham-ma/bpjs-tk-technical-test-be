@@ -2,6 +2,10 @@ import { Skill } from '../entities/Skill';
 import { SkillInputDTO } from '../../../application/skill/dtos/SkillInputDTO';
 
 export interface ISkillRepository {
-  replaceForUser(userId: string, skills: SkillInputDTO[]): Promise<Skill[]>;
+  create(input: SkillInputDTO): Promise<Skill>;
+  findAll(): Promise<Skill[]>;
+  findById(id: string): Promise<Skill | null>;
+  findManyByIds(ids: string[]): Promise<Skill[]>;
+  syncUserSkills(userId: string, skills: SkillInputDTO[]): Promise<Skill[]>;
   findByUserId(userId: string): Promise<Skill[]>;
 }

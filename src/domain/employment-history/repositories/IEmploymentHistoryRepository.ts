@@ -1,6 +1,8 @@
 import { EmploymentHistory } from '../entities/EmploymentHistory';
+import { EmploymentHistoryInputDTO } from '../../../application/employment-history/dtos/EmploymentHistoryInputDTO';
 
 export interface IEmploymentHistoryRepository {
-  replaceForUser(userId: string, items: Omit<EmploymentHistory, 'id' | 'userId'>[]): Promise<EmploymentHistory[]>;
+  syncForUser(userId: string, items: EmploymentHistoryInputDTO[]): Promise<EmploymentHistory[]>;
+  findIdsByUserId(userId: string): Promise<string[]>;
   findByUserId(userId: string): Promise<EmploymentHistory[]>;
 }

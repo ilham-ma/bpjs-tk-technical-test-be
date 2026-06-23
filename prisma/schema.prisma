@@ -27,12 +27,12 @@ model User {
   drivingLicense    String      @db.VarChar(20)
   nationality       String      @db.VarChar(30)
   placeOfBirth      String      @db.VarChar(25)
-  dateOfBirth       DateTime    @db.Date
+  dateOfBirth       String      @db.VarChar(11)
   photoUrl          String      @db.Text
   professionalSummary String    @db.Text
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
-  skills            Skill[]
+  skills            UserSkill[]
   educations        Education[]
   employmentHistories EmploymentHistory[]
 
@@ -40,21 +40,30 @@ model User {
 }
 
 model Skill {
-  id     String     @id @default(uuid()) @db.VarChar(36)
-  name   String     @db.VarChar(255)
-  level  SkillLevel
-  userId String     @db.VarChar(36)
-  user   User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id    String      @id @default(uuid()) @db.VarChar(36)
+  name  String      @db.VarChar(255)
+  level SkillLevel
+  users UserSkill[]
 
   @@map("skills")
+}
+
+model UserSkill {
+  userId  String @db.VarChar(36)
+  skillId String @db.VarChar(36)
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([userId, skillId])
+  @@map("user_skills")
 }
 
 model Education {
   id          String    @id @default(uuid()) @db.VarChar(36)
   school      String    @db.VarChar(255)
   degree      String    @db.VarChar(255)
-  startDate   DateTime  @db.Date
-  endDate     DateTime? @db.Date
+  startDate   String    @db.VarChar(8)
+  endDate     String?   @db.VarChar(8)
   city        String    @db.VarChar(255)
   description String    @db.Text
   userId      String    @db.VarChar(36)
@@ -67,8 +76,8 @@ model EmploymentHistory {
   id          String    @id @default(uuid()) @db.VarChar(36)
   jobTitle    String    @db.VarChar(255)
   employer    String    @db.VarChar(255)
-  startDate   DateTime  @db.Date
-  endDate     DateTime? @db.Date
+  startDate   String    @db.VarChar(8)
+  endDate     String?   @db.VarChar(8)
   city        String    @db.VarChar(255)
   description String    @db.Text
   userId      String    @db.VarChar(36)

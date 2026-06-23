@@ -7,6 +7,8 @@ vi.mock("../../../../../src/infrastructure/database/prisma/client", () => ({
     education: {
       deleteMany: vi.fn(),
       createMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
       findMany: vi.fn(),
     },
     $transaction: vi.fn(),
@@ -50,214 +52,199 @@ describe("PrismaEducationRepository", () => {
     vi.mocked(prisma.$transaction).mockResolvedValue([null, null]);
   });
 
-  describe("replaceForUser", () => {
-    it("should call deleteMany with correct userId inside transaction", async () => {
-      vi.mocked(prisma.education.findMany).mockResolvedValue(mockEducations);
-
-      await repository.replaceForUser(userId, [
+  describe("syncForUser", () => {
+    it("should create new educations when id is not provided", async () => {
+      const input: EducationInputDTO[] = [
         {
           school: "University of Technology",
           degree: "Bachelor of Computer Science",
-          startDate: new Date("2018-09-01"),
-          endDate: new Date("2022-06-15"),
+          startDate: "2018-sep",
+          endDate: "2022-jun",
           city: "Bandung",
           description: "Studied computer science fundamentals",
         },
-      ]);
+      ];
 
-      expect(prisma.education.deleteMany).toHaveBeenCalledWith({
-        where: { userId },
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          education: {
+            findMany: vi.fn().mockResolvedValue([]),
+            create: vi.fn().mockResolvedValue(mockEducations[0]),
+            update: vi.fn(),
+            deleteMany: vi.fn(),
+          },
+        };
+        await callback(tx);
       });
+
+      vi.mocked(prisma.education.findMany).mockResolvedValue([mockEducations[0]]);
+
+      const result = await repository.syncForUser(userId, input);
+
+      expect(result).toHaveLength(1);
     });
 
-    it("should call createMany with educations mapped to include userId", async () => {
-      const inputs: EducationInputDTO[] = [
+    it("should update existing educations when id is provided", async () => {
+      const input: EducationInputDTO[] = [
         {
+          id: mockEducations[0].id,
+          school: "Updated University",
+          degree: "Bachelor of Computer Science",
+          startDate: "2018-sep",
+          endDate: "2022-jun",
+          city: "Bandung",
+          description: "Studied computer science fundamentals",
+        },
+      ];
+
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          education: {
+            findMany: vi.fn().mockResolvedValue([{ id: mockEducations[0].id }]),
+            update: vi.fn(),
+            deleteMany: vi.fn(),
+          },
+        };
+        await callback(tx);
+      });
+
+      vi.mocked(prisma.education.findMany).mockResolvedValue([mockEducations[0]]);
+
+      const result = await repository.syncForUser(userId, input);
+
+      expect(result).toHaveLength(1);
+    });
+
+    it("should throw error if education id does not belong to user", async () => {
+      const input: EducationInputDTO[] = [
+        {
+          id: "non-existent-id",
+          school: "University",
+          degree: "Bachelor",
+          startDate: "2020-sep",
+          endDate: "2024-jun",
+          city: "Jakarta",
+          description: "Bachelor program",
+        },
+      ];
+
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          education: {
+            findMany: vi.fn().mockResolvedValue([]),
+          },
+        };
+        try {
+          await callback(tx);
+        } catch (err) {
+          throw err;
+        }
+      });
+
+      await expect(repository.syncForUser(userId, input))
+        .rejects.toThrow("does not belong to this user");
+    });
+
+    it("should delete educations not in the payload", async () => {
+      const eduId1 = mockEducations[0].id;
+      const eduId2 = mockEducations[1].id;
+
+      const input: EducationInputDTO[] = [
+        {
+          id: eduId1,
           school: "University of Technology",
           degree: "Bachelor of Computer Science",
-          startDate: new Date("2018-09-01"),
-          endDate: new Date("2022-06-15"),
+          startDate: "2018-sep",
+          endDate: "2022-jun",
+          city: "Bandung",
+          description: "Studied computer science fundamentals",
+        },
+      ];
+
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          education: {
+            findMany: vi.fn().mockResolvedValue([{ id: eduId1 }, { id: eduId2 }]),
+            update: vi.fn(),
+            deleteMany: vi.fn(),
+          },
+        };
+        await callback(tx);
+        expect(tx.education.deleteMany).toHaveBeenCalledWith({
+          where: { userId, id: { notIn: [eduId1] } },
+        });
+      });
+
+      vi.mocked(prisma.education.findMany).mockResolvedValue([mockEducations[0]]);
+
+      await repository.syncForUser(userId, input);
+    });
+
+    it("should handle mixed create and update", async () => {
+      const input: EducationInputDTO[] = [
+        {
+          id: mockEducations[0].id,
+          school: "University of Technology",
+          degree: "Bachelor of Computer Science",
+          startDate: "2018-sep",
+          endDate: "2022-jun",
           city: "Bandung",
           description: "Studied computer science fundamentals",
         },
         {
           school: "Advanced Institute",
           degree: "Master of Science",
-          startDate: new Date("2022-09-01"),
+          startDate: "2022-sep",
           endDate: null,
           city: "Jakarta",
           description: "Currently pursuing master degree",
         },
       ];
 
-      vi.mocked(prisma.education.findMany).mockResolvedValue(mockEducations);
-
-      await repository.replaceForUser(userId, inputs);
-
-      expect(prisma.education.createMany).toHaveBeenCalledWith({
-        data: [
-          {
-            school: "University of Technology",
-            degree: "Bachelor of Computer Science",
-            startDate: new Date("2018-09-01"),
-            endDate: new Date("2022-06-15"),
-            city: "Bandung",
-            description: "Studied computer science fundamentals",
-            userId,
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          education: {
+            findMany: vi.fn().mockResolvedValue([{ id: mockEducations[0].id }]),
+            update: vi.fn(),
+            create: vi.fn().mockResolvedValue(mockEducations[1]),
+            deleteMany: vi.fn(),
           },
-          {
-            school: "Advanced Institute",
-            degree: "Master of Science",
-            startDate: new Date("2022-09-01"),
-            endDate: null,
-            city: "Jakarta",
-            description: "Currently pursuing master degree",
-            userId,
-          },
-        ],
+        };
+        await callback(tx);
       });
-    });
 
-    it("should wrap deleteMany and createMany inside a single transaction", async () => {
-      const inputs: EducationInputDTO[] = [
-        {
-          school: "State University",
-          degree: "Bachelor of Arts",
-          startDate: new Date("2020-09-01"),
-          endDate: new Date("2024-06-15"),
-          city: "Surabaya",
-          description: "Bachelor of Arts program",
-        },
-      ];
-
-      vi.mocked(prisma.education.findMany).mockResolvedValue([]);
-
-      await repository.replaceForUser(userId, inputs);
-
-      const transactionArg = vi.mocked(prisma.$transaction).mock.calls[0][0];
-      expect(Array.isArray(transactionArg)).toBe(true);
-      expect((transactionArg as any[]).length).toBe(2);
-    });
-
-    it("should return educations fetched after transaction completes", async () => {
       vi.mocked(prisma.education.findMany).mockResolvedValue(mockEducations);
 
-      const result = await repository.replaceForUser(userId, [
-        {
-          school: "University of Technology",
-          degree: "Bachelor of Computer Science",
-          startDate: new Date("2018-09-01"),
-          endDate: new Date("2022-06-15"),
-          city: "Bandung",
-          description: "Studied computer science fundamentals",
-        },
-      ]);
+      const result = await repository.syncForUser(userId, input);
 
-      expect(prisma.education.findMany).toHaveBeenCalledWith({ where: { userId } });
-      expect(result).toEqual(mockEducations);
+      expect(result).toHaveLength(2);
     });
+  });
 
-    it("should call createMany with empty data when educations array is empty", async () => {
-      vi.mocked(prisma.education.findMany).mockResolvedValue([]);
+  describe("findIdsByUserId", () => {
+    it("should return education ids for user", async () => {
+      const eduId1 = mockEducations[0].id;
+      const eduId2 = mockEducations[1].id;
+      vi.mocked(prisma.education.findMany).mockResolvedValue([
+        { id: eduId1 },
+        { id: eduId2 },
+      ] as any);
 
-      const result = await repository.replaceForUser(userId, []);
+      const result = await repository.findIdsByUserId(userId);
 
-      expect(prisma.education.createMany).toHaveBeenCalledWith({ data: [] });
-      expect(result).toEqual([]);
-    });
-
-    it("should still call deleteMany even when educations array is empty", async () => {
-      vi.mocked(prisma.education.findMany).mockResolvedValue([]);
-
-      await repository.replaceForUser(userId, []);
-
-      expect(prisma.education.deleteMany).toHaveBeenCalledWith({
+      expect(result).toEqual([eduId1, eduId2]);
+      expect(prisma.education.findMany).toHaveBeenCalledWith({
         where: { userId },
+        select: { id: true },
       });
     });
 
-    it("should handle null endDate correctly", async () => {
-      const inputs: EducationInputDTO[] = [
-        {
-          school: "Current University",
-          degree: "PhD in Mathematics",
-          startDate: new Date("2022-09-01"),
-          endDate: null,
-          city: "Jakarta",
-          description: "PhD program in mathematics",
-        },
-      ];
+    it("should return empty array when user has no educations", async () => {
+      vi.mocked(prisma.education.findMany).mockResolvedValue([]);
 
-      const expectedEducations: Education[] = [
-        {
-          id: "550e8400-e29b-41d4-a716-446655440003",
-          school: "Current University",
-          degree: "PhD in Mathematics",
-          startDate: new Date("2022-09-01"),
-          endDate: null,
-          city: "Jakarta",
-          description: "PhD program in mathematics",
-          userId,
-        },
-      ];
+      const result = await repository.findIdsByUserId(userId);
 
-      vi.mocked(prisma.education.findMany).mockResolvedValue(expectedEducations);
-
-      const result = await repository.replaceForUser(userId, inputs);
-
-      expect(prisma.education.createMany).toHaveBeenCalledWith({
-        data: [
-          {
-            school: "Current University",
-            degree: "PhD in Mathematics",
-            startDate: new Date("2022-09-01"),
-            endDate: null,
-            city: "Jakarta",
-            description: "PhD program in mathematics",
-            userId,
-          },
-        ],
-      });
-      expect(result).toEqual(expectedEducations);
-    });
-
-    it("should propagate error when transaction fails", async () => {
-      vi.mocked(prisma.$transaction).mockRejectedValue(
-        new Error("Transaction failed"),
-      );
-
-      await expect(
-        repository.replaceForUser(userId, [
-          {
-            school: "University",
-            degree: "Bachelor",
-            startDate: new Date("2020-09-01"),
-            endDate: new Date("2024-06-15"),
-            city: "Jakarta",
-            description: "Bachelor program",
-          },
-        ]),
-      ).rejects.toThrow("Transaction failed");
-    });
-
-    it("should propagate error when findMany after transaction fails", async () => {
-      vi.mocked(prisma.$transaction).mockResolvedValue([null, null]);
-      vi.mocked(prisma.education.findMany).mockRejectedValue(
-        new Error("Database error"),
-      );
-
-      await expect(
-        repository.replaceForUser(userId, [
-          {
-            school: "University",
-            degree: "Bachelor",
-            startDate: new Date("2020-09-01"),
-            endDate: new Date("2024-06-15"),
-            city: "Jakarta",
-            description: "Bachelor program",
-          },
-        ]),
-      ).rejects.toThrow("Database error");
+      expect(result).toEqual([]);
     });
   });
 

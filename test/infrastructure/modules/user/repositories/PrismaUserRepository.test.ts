@@ -60,7 +60,7 @@ describe("PrismaUserRepository", () => {
       expect(result).toEqual(mockUser);
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: mockUser.id },
-        include: { skills: true, educations: true, employmentHistories: true },
+        include: { skills: { include: { skill: true } }, educations: true, employmentHistories: true },
       });
     });
 
@@ -167,7 +167,7 @@ describe("PrismaUserRepository", () => {
 
       expect(result).toEqual(users);
       expect(prisma.user.findMany).toHaveBeenCalledWith({
-        include: { skills: true, educations: true, employmentHistories: true },
+        include: { skills: { include: { skill: true } }, educations: true, employmentHistories: true },
         orderBy: { createdAt: 'desc' },
       });
     });
@@ -179,7 +179,7 @@ describe("PrismaUserRepository", () => {
 
       expect(result).toEqual([]);
       expect(prisma.user.findMany).toHaveBeenCalledWith({
-        include: { skills: true, educations: true, employmentHistories: true },
+        include: { skills: { include: { skill: true } }, educations: true, employmentHistories: true },
         orderBy: { createdAt: 'desc' },
       });
     });

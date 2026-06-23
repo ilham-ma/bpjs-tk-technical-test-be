@@ -5,20 +5,53 @@ import {
   validationResult,
   ValidationChain,
 } from "express-validator";
+import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
+
+const MONTH_ABBR = "(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)";
+const FULL_DATE_REGEX = new RegExp(`^\\d{4}-${MONTH_ABBR}-\\d{2}$`);
+const MONTH_YEAR_REGEX = new RegExp(`^\\d{4}-${MONTH_ABBR}$`);
+
+function isValidFullDateString(value: string): boolean {
+  if (!FULL_DATE_REGEX.test(value)) return false;
+  const normalized = value.replace(/-([a-z]{3})-/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}-`);
+  return dayjs(normalized, "YYYY-MMM-DD", true).isValid();
+}
+
+function isValidMonthYearString(value: string): boolean {
+  if (!MONTH_YEAR_REGEX.test(value)) return false;
+  const normalized = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+  return dayjs(normalized, "YYYY-MMM", true).isValid();
+}
 
 const skillsValidatorRequired: ValidationChain[] = [
   body("skills")
     .isArray({ min: 1 })
     .withMessage("skills must contain at least 1 item"),
-  body("skills.*.name")
-    .notEmpty()
-    .withMessage("skill name is required")
-    .trim()
-    .isLength({ max: 255 })
-    .withMessage("skill name must not exceed 255 characters"),
-  body("skills.*.level")
-    .isIn(["Basic", "Intermediate", "Expert"])
-    .withMessage("skill level must be one of: Basic, Intermediate, Expert"),
+  body("skills.*")
+    .custom((item) => {
+      if (item.id) {
+        throw new Error("skill id must not be provided when creating a new skill");
+      }
+      if (!item.name) {
+        throw new Error("skill name is required");
+      }
+      if (!item.level) {
+        throw new Error("skill level is required");
+      }
+      if (!["Basic", "Intermediate", "Expert"].includes(item.level)) {
+        throw new Error("skill level must be one of: Basic, Intermediate, Expert");
+      }
+      if (typeof item.name !== "string" || item.name.trim().length === 0) {
+        throw new Error("skill name cannot be empty");
+      }
+      if (item.name.length > 255) {
+        throw new Error("skill name must not exceed 255 characters");
+      }
+      return true;
+    }),
 ];
 
 const skillsValidatorOptional: ValidationChain[] = [
@@ -26,6 +59,10 @@ const skillsValidatorOptional: ValidationChain[] = [
     .optional()
     .isArray({ min: 1 })
     .withMessage("skills must contain at least 1 item"),
+  body("skills.*.id")
+    .optional()
+    .isUUID(4)
+    .withMessage("skill id must be a valid UUID"),
   body("skills.*.name")
     .optional({ checkFalsy: true })
     .notEmpty()
@@ -35,14 +72,30 @@ const skillsValidatorOptional: ValidationChain[] = [
     .withMessage("skill name must not exceed 255 characters"),
   body("skills.*.level")
     .optional({ checkFalsy: true })
+    .notEmpty()
+    .withMessage("skill level is required")
     .isIn(["Basic", "Intermediate", "Expert"])
     .withMessage("skill level must be one of: Basic, Intermediate, Expert"),
+  body("skills.*")
+    .custom((item) => {
+      if (!item.id && (!item.name || !item.level)) {
+        throw new Error("skill must have either id or both name and level");
+      }
+      return true;
+    }),
 ];
 
 const educationsValidatorRequired: ValidationChain[] = [
   body("educations")
     .isArray({ min: 1 })
     .withMessage("educations must contain at least 1 item"),
+  body("educations.*")
+    .custom((item) => {
+      if (item.id) {
+        throw new Error("education id must not be provided when creating a new education");
+      }
+      return true;
+    }),
   body("educations.*.school")
     .notEmpty()
     .withMessage("educations school is required")
@@ -58,31 +111,31 @@ const educationsValidatorRequired: ValidationChain[] = [
   body("educations.*.startDate")
     .notEmpty()
     .withMessage("educations startDate is required")
-    .isISO8601({ strict: true })
-    .withMessage("educations startDate must be a valid ISO 8601 date")
     .custom((value) => {
-      const date = new Date(value);
-      if (date > new Date()) {
+      if (!isValidMonthYearString(value)) {
+        throw new Error("educations startDate must be in format YYYY-mmm (e.g., 2026-jul)");
+      }
+      const normalized = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+      if (dayjs(normalized, "YYYY-MMM", true).isAfter(dayjs())) {
         throw new Error("educations startDate must not be in the future");
       }
       return true;
     }),
   body("educations.*.endDate")
-    .optional({ checkFalsy: true })
-    .isISO8601({ strict: true })
-    .withMessage("educations endDate must be a valid ISO 8601 date")
+    .optional({ nullable: true, checkFalsy: false })
     .custom((value, { req }) => {
-      if (!value) return true;
-      const endDate = new Date(value);
-      const startDate = new Date(
-        (req.body.educations as any[])?.[
-          (req.body.educations as any[]).findIndex((e) => e.endDate === value)
-        ]?.startDate,
-      );
-      if (endDate < startDate) {
-        throw new Error(
-          "educations endDate must be greater than or equal to startDate",
-        );
+      if (value === null || value === undefined || value === "") return true;
+      if (!isValidMonthYearString(value)) {
+        throw new Error("educations endDate must be in format YYYY-mmm (e.g., 2026-jul)");
+      }
+      const idx = (req.body.educations as any[]).findIndex((e) => e.endDate === value);
+      const startRaw = (req.body.educations as any[])[idx]?.startDate;
+      if (startRaw && isValidMonthYearString(startRaw)) {
+        const startCap = startRaw.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+        const endCap = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+        if (dayjs(endCap, "YYYY-MMM", true).isBefore(dayjs(startCap, "YYYY-MMM", true))) {
+          throw new Error("educations endDate must be greater than or equal to startDate");
+        }
       }
       return true;
     }),
@@ -105,6 +158,10 @@ const educationsValidatorOptional: ValidationChain[] = [
     .optional()
     .isArray({ min: 1 })
     .withMessage("educations must contain at least 1 item"),
+  body("educations.*.id")
+    .optional()
+    .isUUID(4)
+    .withMessage("education id must be a valid UUID"),
   body("educations.*.school")
     .optional({ checkFalsy: true })
     .notEmpty()
@@ -121,32 +178,32 @@ const educationsValidatorOptional: ValidationChain[] = [
     .withMessage("educations degree must not exceed 255 characters"),
   body("educations.*.startDate")
     .optional({ checkFalsy: true })
-    .isISO8601({ strict: true })
-    .withMessage("educations startDate must be a valid ISO 8601 date")
     .custom((value) => {
       if (!value) return true;
-      const date = new Date(value);
-      if (date > new Date()) {
+      if (!isValidMonthYearString(value)) {
+        throw new Error("educations startDate must be in format YYYY-mmm (e.g., 2026-jul)");
+      }
+      const normalized = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+      if (dayjs(normalized, "YYYY-MMM", true).isAfter(dayjs())) {
         throw new Error("educations startDate must not be in the future");
       }
       return true;
     }),
   body("educations.*.endDate")
     .optional({ checkFalsy: true })
-    .isISO8601({ strict: true })
-    .withMessage("educations endDate must be a valid ISO 8601 date")
     .custom((value, { req }) => {
       if (!value) return true;
-      const endDate = new Date(value);
-      const startDate = new Date(
-        (req.body.educations as any[])?.[
-          (req.body.educations as any[]).findIndex((e) => e.endDate === value)
-        ]?.startDate,
-      );
-      if (endDate < startDate) {
-        throw new Error(
-          "educations endDate must be greater than or equal to startDate",
-        );
+      if (!isValidMonthYearString(value)) {
+        throw new Error("educations endDate must be in format YYYY-mmm (e.g., 2026-jul)");
+      }
+      const idx = (req.body.educations as any[]).findIndex((e) => e.endDate === value);
+      const startRaw = (req.body.educations as any[])[idx]?.startDate;
+      if (startRaw && isValidMonthYearString(startRaw)) {
+        const startCap = startRaw.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+        const endCap = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+        if (dayjs(endCap, "YYYY-MMM", true).isBefore(dayjs(startCap, "YYYY-MMM", true))) {
+          throw new Error("educations endDate must be greater than or equal to startDate");
+        }
       }
       return true;
     }),
@@ -170,6 +227,13 @@ const employmentHistoriesValidatorRequired: ValidationChain[] = [
   body("employmentHistories")
     .isArray({ min: 1 })
     .withMessage("employmentHistories must contain at least 1 item"),
+  body("employmentHistories.*")
+    .custom((item) => {
+      if (item.id) {
+        throw new Error("employment history id must not be provided when creating a new employment history");
+      }
+      return true;
+    }),
   body("employmentHistories.*.jobTitle")
     .notEmpty()
     .withMessage("employmentHistories jobTitle is required")
@@ -185,35 +249,31 @@ const employmentHistoriesValidatorRequired: ValidationChain[] = [
   body("employmentHistories.*.startDate")
     .notEmpty()
     .withMessage("employmentHistories startDate is required")
-    .isISO8601({ strict: true })
-    .withMessage("employmentHistories startDate must be a valid ISO 8601 date")
     .custom((value) => {
-      const date = new Date(value);
-      if (date > new Date()) {
-        throw new Error(
-          "employmentHistories startDate must not be in the future",
-        );
+      if (!isValidMonthYearString(value)) {
+        throw new Error("employmentHistories startDate must be in format YYYY-mmm (e.g., 2026-jul)");
+      }
+      const normalized = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+      if (dayjs(normalized, "YYYY-MMM", true).isAfter(dayjs())) {
+        throw new Error("employmentHistories startDate must not be in the future");
       }
       return true;
     }),
   body("employmentHistories.*.endDate")
-    .optional({ checkFalsy: true })
-    .isISO8601({ strict: true })
-    .withMessage("employmentHistories endDate must be a valid ISO 8601 date")
+    .optional({ nullable: true, checkFalsy: false })
     .custom((value, { req }) => {
-      if (!value) return true;
-      const endDate = new Date(value);
-      const startDate = new Date(
-        (req.body.employmentHistories as any[])?.[
-          (req.body.employmentHistories as any[]).findIndex(
-            (e) => e.endDate === value,
-          )
-        ]?.startDate,
-      );
-      if (endDate < startDate) {
-        throw new Error(
-          "employmentHistories endDate must be greater than or equal to startDate",
-        );
+      if (value === null || value === undefined || value === "") return true;
+      if (!isValidMonthYearString(value)) {
+        throw new Error("employmentHistories endDate must be in format YYYY-mmm (e.g., 2026-jul)");
+      }
+      const idx = (req.body.employmentHistories as any[]).findIndex((e) => e.endDate === value);
+      const startRaw = (req.body.employmentHistories as any[])[idx]?.startDate;
+      if (startRaw && isValidMonthYearString(startRaw)) {
+        const startCap = startRaw.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+        const endCap = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+        if (dayjs(endCap, "YYYY-MMM", true).isBefore(dayjs(startCap, "YYYY-MMM", true))) {
+          throw new Error("employmentHistories endDate must be greater than or equal to startDate");
+        }
       }
       return true;
     }),
@@ -236,6 +296,10 @@ const employmentHistoriesValidatorOptional: ValidationChain[] = [
     .optional()
     .isArray({ min: 1 })
     .withMessage("employmentHistories must contain at least 1 item"),
+  body("employmentHistories.*.id")
+    .optional()
+    .isUUID(4)
+    .withMessage("employment history id must be a valid UUID"),
   body("employmentHistories.*.jobTitle")
     .optional({ checkFalsy: true })
     .notEmpty()
@@ -252,36 +316,32 @@ const employmentHistoriesValidatorOptional: ValidationChain[] = [
     .withMessage("employmentHistories employer must not exceed 255 characters"),
   body("employmentHistories.*.startDate")
     .optional({ checkFalsy: true })
-    .isISO8601({ strict: true })
-    .withMessage("employmentHistories startDate must be a valid ISO 8601 date")
     .custom((value) => {
       if (!value) return true;
-      const date = new Date(value);
-      if (date > new Date()) {
-        throw new Error(
-          "employmentHistories startDate must not be in the future",
-        );
+      if (!isValidMonthYearString(value)) {
+        throw new Error("employmentHistories startDate must be in format YYYY-mmm (e.g., 2026-jul)");
+      }
+      const normalized = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+      if (dayjs(normalized, "YYYY-MMM", true).isAfter(dayjs())) {
+        throw new Error("employmentHistories startDate must not be in the future");
       }
       return true;
     }),
   body("employmentHistories.*.endDate")
     .optional({ checkFalsy: true })
-    .isISO8601({ strict: true })
-    .withMessage("employmentHistories endDate must be a valid ISO 8601 date")
     .custom((value, { req }) => {
       if (!value) return true;
-      const endDate = new Date(value);
-      const startDate = new Date(
-        (req.body.employmentHistories as any[])?.[
-          (req.body.employmentHistories as any[]).findIndex(
-            (e) => e.endDate === value,
-          )
-        ]?.startDate,
-      );
-      if (endDate < startDate) {
-        throw new Error(
-          "employmentHistories endDate must be greater than or equal to startDate",
-        );
+      if (!isValidMonthYearString(value)) {
+        throw new Error("employmentHistories endDate must be in format YYYY-mmm (e.g., 2026-jul)");
+      }
+      const idx = (req.body.employmentHistories as any[]).findIndex((e) => e.endDate === value);
+      const startRaw = (req.body.employmentHistories as any[])[idx]?.startDate;
+      if (startRaw && isValidMonthYearString(startRaw)) {
+        const startCap = startRaw.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+        const endCap = value.replace(/-([a-z]{3})$/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}`);
+        if (dayjs(endCap, "YYYY-MMM", true).isBefore(dayjs(startCap, "YYYY-MMM", true))) {
+          throw new Error("employmentHistories endDate must be greater than or equal to startDate");
+        }
       }
       return true;
     }),
@@ -381,11 +441,12 @@ export const createUserValidator: ValidationChain[] = [
   body("dateOfBirth")
     .notEmpty()
     .withMessage("dateOfBirth is required")
-    .isISO8601({ strict: true })
-    .withMessage("dateOfBirth must be a valid ISO 8601 date")
     .custom((value) => {
-      const date = new Date(value);
-      if (date > new Date()) {
+      if (!isValidFullDateString(value)) {
+        throw new Error("dateOfBirth must be in format YYYY-mmm-DD (e.g., 2026-jul-02)");
+      }
+      const normalized = value.replace(/-([a-z]{3})-/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}-`);
+      if (dayjs(normalized, "YYYY-MMM-DD", true).isAfter(dayjs())) {
         throw new Error("dateOfBirth must not be in the future");
       }
       return true;
@@ -487,11 +548,12 @@ export const updateUserValidator: ValidationChain[] = [
   body("dateOfBirth")
     .notEmpty()
     .withMessage("dateOfBirth is required")
-    .isISO8601({ strict: true })
-    .withMessage("dateOfBirth must be a valid ISO 8601 date")
     .custom((value) => {
-      const date = new Date(value);
-      if (date > new Date()) {
+      if (!isValidFullDateString(value)) {
+        throw new Error("dateOfBirth must be in format YYYY-mmm-DD (e.g., 2026-jul-02)");
+      }
+      const normalized = value.replace(/-([a-z]{3})-/, (_: string, m: string) => `-${m[0].toUpperCase()}${m.slice(1)}-`);
+      if (dayjs(normalized, "YYYY-MMM-DD", true).isAfter(dayjs())) {
         throw new Error("dateOfBirth must not be in the future");
       }
       return true;

@@ -16,7 +16,7 @@ export type User = {
   drivingLicense: string;
   nationality: string;
   placeOfBirth: string;
-  dateOfBirth: Date;
+  dateOfBirth: string;
   photoUrl: string;
   professionalSummary: string;
   createdAt: Date;
