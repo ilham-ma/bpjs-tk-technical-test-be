@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as fs from "fs/promises";
 import { randomUUID } from "crypto";
-import { IFileStorageService } from "../../../../domain/profile/services/IFileStorageService";
+import { IFileStorageService } from "../../../domain/profile/services/IFileStorageService";
 
 const MIME_TO_EXT: Record<string, string> = {
   "image/jpeg": "jpg",

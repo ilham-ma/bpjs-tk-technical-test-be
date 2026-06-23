@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { ProfileController } from "../controllers/ProfileController";
-import { LocalFileStorageService } from "../services/LocalFileStorageService";
+import { LocalFileStorageService } from "../../../../application/profile/services/LocalFileStorageService";
 import { ProfileService } from "../../../../application/profile/services/ProfileService";
 import {
   filenameParamValidator,
@@ -20,7 +20,7 @@ router.get(
   "/:filename",
   filenameParamValidator,
   handleValidationError,
-  profileController.download
+  profileController.download,
 );
 
 export default router;

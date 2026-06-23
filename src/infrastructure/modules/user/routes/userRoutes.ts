@@ -4,7 +4,7 @@ import { PrismaUserRepository } from "../repositories/PrismaUserRepository";
 import { PrismaSkillRepository } from "../../skill/repositories/PrismaSkillRepository";
 import { PrismaEducationRepository } from "../../education/repositories/PrismaEducationRepository";
 import { PrismaEmploymentHistoryRepository } from "../../employment-history/repositories/PrismaEmploymentHistoryRepository";
-import { LocalFileStorageService } from "../../profile/services/LocalFileStorageService";
+import { LocalFileStorageService } from "../../../../application/profile/services/LocalFileStorageService";
 import { UserService } from "../../../../application/user/services/UserService";
 import {
   createUserValidator,
@@ -20,13 +20,16 @@ const skillRepository = new PrismaSkillRepository();
 const educationRepository = new PrismaEducationRepository();
 const employmentHistoryRepository = new PrismaEmploymentHistoryRepository();
 const fileStorage = new LocalFileStorageService();
-const userService = new UserService(userRepository, skillRepository, educationRepository, employmentHistoryRepository, fileStorage);
+const userService = new UserService(
+  userRepository,
+  skillRepository,
+  educationRepository,
+  employmentHistoryRepository,
+  fileStorage,
+);
 const userController = new UserController(userService);
 
-router.get(
-  "/",
-  userController.findAll,
-);
+router.get("/", userController.findAll);
 
 router.post(
   "/",
