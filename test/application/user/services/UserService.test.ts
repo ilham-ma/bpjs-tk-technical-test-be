@@ -52,10 +52,11 @@ describe("UserService", () => {
     };
     mockSkillRepository = {
       create: vi.fn(),
+      createMany: vi.fn(),
       findAll: vi.fn(),
       findById: vi.fn(),
       findManyByIds: vi.fn(),
-      syncUserSkills: vi.fn(),
+      linkUserSkills: vi.fn(),
       findByUserId: vi.fn(),
     };
     mockEducationRepository = {
@@ -95,7 +96,7 @@ describe("UserService", () => {
         dateOfBirth: "1990-01-15",
         photoUrl: "/photos/john.jpg",
         professionalSummary: "Experienced backend engineer",
-        skills: [{ name: "TypeScript", level: "Expert" }],
+        skills: [{ id: "550e8400-e29b-41d4-a716-446655440001", name: "TypeScript", level: "Expert" }],
         educations: [
           {
             school: "University of Technology",
@@ -125,8 +126,8 @@ describe("UserService", () => {
         educations: [],
         employmentHistories: [],
       });
-      vi.mocked(mockSkillRepository.syncUserSkills).mockResolvedValue([
-        { id: "skill-1", name: "TypeScript", level: "Expert" },
+      vi.mocked(mockSkillRepository.linkUserSkills).mockResolvedValue([
+        { id: "550e8400-e29b-41d4-a716-446655440001", name: "TypeScript", level: "Expert" },
       ]);
       vi.mocked(mockEducationRepository.syncForUser).mockResolvedValue(
         dto.educations.map((edu, idx) => ({
@@ -147,9 +148,9 @@ describe("UserService", () => {
 
       expect(mockRepository.findByEmail).toHaveBeenCalledWith(dto.email);
       expect(mockRepository.create).toHaveBeenCalled();
-      expect(mockSkillRepository.syncUserSkills).toHaveBeenCalledWith(
+      expect(mockSkillRepository.linkUserSkills).toHaveBeenCalledWith(
         mockUser.id,
-        dto.skills
+        ["550e8400-e29b-41d4-a716-446655440001"],
       );
       expect(mockEducationRepository.syncForUser).toHaveBeenCalledWith(
         mockUser.id,
@@ -181,7 +182,7 @@ describe("UserService", () => {
         dateOfBirth: "1990-01-15",
         photoUrl: "/photos/jane.jpg",
         professionalSummary: "Backend engineer with 5 years experience",
-        skills: [{ name: "Java", level: "Intermediate" }],
+        skills: [{ id: "550e8400-e29b-41d4-a716-446655440001", name: "Java", level: "Intermediate" }],
         educations: [
           {
             school: "State University",
@@ -255,7 +256,7 @@ describe("UserService", () => {
         placeOfBirth: "Jakarta",
         dateOfBirth: "1990-01-15",
         photoUrl: "/photos/john-updated.jpg",
-        skills: [{ id: "skill-1", name: "React", level: "Intermediate" }],
+        skills: [{ id: "550e8400-e29b-41d4-a716-446655440099", name: "React", level: "Intermediate" }],
         educations,
         employmentHistories,
       };
@@ -278,8 +279,8 @@ describe("UserService", () => {
         educations: [],
         employmentHistories: [],
       });
-      vi.mocked(mockSkillRepository.syncUserSkills).mockResolvedValue([
-        { id: "skill-1", name: "React", level: "Intermediate" },
+      vi.mocked(mockSkillRepository.linkUserSkills).mockResolvedValue([
+        { id: "550e8400-e29b-41d4-a716-446655440099", name: "React", level: "Intermediate" },
       ]);
       vi.mocked(mockEducationRepository.syncForUser).mockResolvedValue(
         educations.map((edu, idx) => ({
@@ -300,7 +301,7 @@ describe("UserService", () => {
 
       expect(mockRepository.findById).toHaveBeenCalledWith(userId);
       expect(mockRepository.update).toHaveBeenCalled();
-      expect(mockSkillRepository.syncUserSkills).toHaveBeenCalledWith(userId, dto.skills);
+      expect(mockSkillRepository.linkUserSkills).toHaveBeenCalledWith(userId, ["550e8400-e29b-41d4-a716-446655440099"]);
       expect(mockEducationRepository.syncForUser).toHaveBeenCalledWith(userId, educations);
       expect(mockEmploymentHistoryRepository.syncForUser).toHaveBeenCalledWith(userId, employmentHistories);
       expect(result.skills).toHaveLength(1);
@@ -346,7 +347,7 @@ describe("UserService", () => {
 
       const result = await userService.update(userId, dto);
 
-      expect(mockSkillRepository.syncUserSkills).not.toHaveBeenCalled();
+      expect(mockSkillRepository.linkUserSkills).not.toHaveBeenCalled();
       expect(mockEducationRepository.syncForUser).not.toHaveBeenCalled();
       expect(mockEmploymentHistoryRepository.syncForUser).not.toHaveBeenCalled();
       expect(result.skills).toEqual(mockUser.skills);

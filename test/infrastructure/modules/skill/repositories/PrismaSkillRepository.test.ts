@@ -57,6 +57,8 @@ describe("PrismaSkillRepository", () => {
       const inputs: SkillInputDTO[] = [
         { name: "Python", level: "Basic" },
         { name: "Go", level: "Intermediate" },
+        { name: "Ruby", level: "Skillfull" },
+        { name: "Java", level: "Experienced" },
         { name: "TypeScript", level: "Expert" },
       ];
 
@@ -65,7 +67,56 @@ describe("PrismaSkillRepository", () => {
         await repository.create(input);
       }
 
-      expect(prisma.skill.create).toHaveBeenCalledTimes(3);
+      expect(prisma.skill.create).toHaveBeenCalledTimes(5);
+    });
+  });
+
+  describe("createMany", () => {
+    it("should create skills via a transaction and return them", async () => {
+      const inputs: SkillInputDTO[] = [
+        { name: "TypeScript", level: "Expert" },
+        { name: "React", level: "Skillfull" },
+      ];
+      const created: Skill[] = [
+        { id: skillId1, name: "TypeScript", level: "Expert" },
+        { id: skillId2, name: "React", level: "Skillfull" },
+      ];
+
+      vi.mocked(prisma.skill.create).mockImplementation(((args: any) => {
+        return args;
+      }) as any);
+      vi.mocked(prisma.$transaction).mockResolvedValue(created as any);
+
+      const result = await repository.createMany(inputs);
+
+      expect(prisma.skill.create).toHaveBeenCalledTimes(inputs.length);
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(created);
+    });
+
+    it("should handle a single-element array", async () => {
+      const inputs: SkillInputDTO[] = [{ name: "Go", level: "Experienced" }];
+      const created: Skill[] = [{ id: skillId1, name: "Go", level: "Experienced" }];
+
+      vi.mocked(prisma.skill.create).mockImplementation(((args: any) => args) as any);
+      vi.mocked(prisma.$transaction).mockResolvedValue(created as any);
+
+      const result = await repository.createMany(inputs);
+
+      expect(result).toEqual(created);
+      expect(result).toHaveLength(1);
+    });
+
+    it("should rollback on error (propagates transaction error)", async () => {
+      const inputs: SkillInputDTO[] = [
+        { name: "TypeScript", level: "Expert" },
+        { name: "Broken", level: "Expert" },
+      ];
+
+      vi.mocked(prisma.skill.create).mockImplementation(((args: any) => args) as any);
+      vi.mocked(prisma.$transaction).mockRejectedValue(new Error("Transaction failed"));
+
+      await expect(repository.createMany(inputs)).rejects.toThrow("Transaction failed");
     });
   });
 
@@ -128,145 +179,100 @@ describe("PrismaSkillRepository", () => {
     });
   });
 
-  describe("syncUserSkills", () => {
-    it("should create new skills when id is not provided", async () => {
-      const input: SkillInputDTO[] = [
-        { name: "TypeScript", level: "Expert" },
-        { name: "React", level: "Intermediate" },
-      ];
-
+  describe("linkUserSkills", () => {
+    function mockTxWithSkills(existingIds: string[]) {
       vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
-          userSkill: {
-            findMany: vi.fn().mockResolvedValue([]),
-            create: vi.fn(),
-            deleteMany: vi.fn(),
-          },
           skill: {
-            create: vi.fn().mockResolvedValueOnce({ id: skillId1, name: "TypeScript", level: "Expert" })
-              .mockResolvedValueOnce({ id: skillId2, name: "React", level: "Intermediate" }),
-            update: vi.fn(),
+            findMany: vi.fn().mockResolvedValue(existingIds.map((id) => ({ id }))),
+          },
+          userSkill: {
+            createMany: vi.fn(),
           },
         };
         await callback(tx);
+        return tx;
       });
+    }
 
+    it("should link existing skills to a user (additive)", async () => {
+      mockTxWithSkills([skillId1, skillId2]);
       vi.mocked(prisma.userSkill.findMany).mockResolvedValue([
         { userId, skillId: skillId1, skill: mockSkills[0], user: null },
         { userId, skillId: skillId2, skill: mockSkills[1], user: null },
       ] as any);
 
-      const result = await repository.syncUserSkills(userId, input);
+      const result = await repository.linkUserSkills(userId, [skillId1, skillId2]);
 
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
       expect(result).toEqual(mockSkills);
     });
 
-    it("should update existing skills when id is provided", async () => {
-      const input: SkillInputDTO[] = [
-        { id: skillId1, name: "TypeScript Updated", level: "Expert" },
-      ];
-
+    it("should deduplicate skill ids before linking", async () => {
+      let capturedCreateManyArgs: any = null;
       vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
-          userSkill: {
-            findMany: vi.fn().mockResolvedValue([{ skillId: skillId1 }]),
-            deleteMany: vi.fn(),
-          },
           skill: {
-            update: vi.fn(),
+            findMany: vi.fn().mockResolvedValue([{ id: skillId1 }]),
+          },
+          userSkill: {
+            createMany: vi.fn().mockImplementation((args: any) => {
+              capturedCreateManyArgs = args;
+            }),
+          },
+        };
+        await callback(tx);
+      });
+      vi.mocked(prisma.userSkill.findMany).mockResolvedValue([
+        { userId, skillId: skillId1, skill: mockSkills[0], user: null },
+      ] as any);
+
+      await repository.linkUserSkills(userId, [skillId1, skillId1]);
+
+      expect(capturedCreateManyArgs?.data).toEqual([{ userId, skillId: skillId1 }]);
+      expect(capturedCreateManyArgs?.skipDuplicates).toBe(true);
+    });
+
+    it("should throw 400 AppError when any skill id is not found", async () => {
+      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
+        const tx = {
+          skill: {
+            findMany: vi.fn().mockResolvedValue([{ id: skillId1 }]),
+          },
+          userSkill: {
+            createMany: vi.fn(),
           },
         };
         await callback(tx);
       });
 
-      vi.mocked(prisma.userSkill.findMany).mockResolvedValue([
-        { userId, skillId: skillId1, skill: mockSkills[0], user: null },
-      ] as any);
-
-      const result = await repository.syncUserSkills(userId, input);
-
-      expect(result).toHaveLength(1);
+      await expect(
+        repository.linkUserSkills(userId, [skillId1, skillId2]),
+      ).rejects.toThrow(/Skill id\(s\) not found/);
     });
 
-    it("should throw error if skill id does not belong to user", async () => {
-      const input: SkillInputDTO[] = [
-        { id: skillId1, name: "TypeScript", level: "Expert" },
-      ];
-
+    it("should skip duplicates when linking an already-linked skill", async () => {
+      let capturedCreateManyArgs: any = null;
       vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
         const tx = {
-          userSkill: {
-            findMany: vi.fn().mockResolvedValue([]),
-          },
-        };
-        try {
-          await callback(tx);
-        } catch (err) {
-          throw err;
-        }
-      });
-
-      await expect(repository.syncUserSkills(userId, input))
-        .rejects.toThrow("does not belong to this user");
-    });
-
-    it("should delete skills not in the payload", async () => {
-      const input: SkillInputDTO[] = [
-        { id: skillId1, name: "TypeScript", level: "Expert" },
-      ];
-
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
-          userSkill: {
-            findMany: vi.fn().mockResolvedValue([{ skillId: skillId1 }, { skillId: skillId2 }]),
-            deleteMany: vi.fn(),
-          },
           skill: {
-            update: vi.fn(),
+            findMany: vi.fn().mockResolvedValue([{ id: skillId1 }]),
           },
-        };
-        await callback(tx);
-        expect(tx.userSkill.deleteMany).toHaveBeenCalledWith({
-          where: { userId, skillId: { notIn: [skillId1] } },
-        });
-      });
-
-      vi.mocked(prisma.userSkill.findMany).mockResolvedValue([
-        { userId, skillId: skillId1, skill: mockSkills[0], user: null },
-      ] as any);
-
-      await repository.syncUserSkills(userId, input);
-    });
-
-    it("should handle mixed create and update", async () => {
-      const input: SkillInputDTO[] = [
-        { id: skillId1, name: "TypeScript", level: "Expert" },
-        { name: "React", level: "Intermediate" },
-      ];
-
-      vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => {
-        const tx = {
           userSkill: {
-            findMany: vi.fn().mockResolvedValue([{ skillId: skillId1 }]),
-            create: vi.fn(),
-            deleteMany: vi.fn(),
-          },
-          skill: {
-            create: vi.fn().mockResolvedValue({ id: skillId2, name: "React", level: "Intermediate" }),
-            update: vi.fn(),
+            createMany: vi.fn().mockImplementation((args: any) => {
+              capturedCreateManyArgs = args;
+            }),
           },
         };
         await callback(tx);
       });
-
       vi.mocked(prisma.userSkill.findMany).mockResolvedValue([
         { userId, skillId: skillId1, skill: mockSkills[0], user: null },
-        { userId, skillId: skillId2, skill: mockSkills[1], user: null },
       ] as any);
 
-      const result = await repository.syncUserSkills(userId, input);
+      await repository.linkUserSkills(userId, [skillId1]);
 
-      expect(result).toHaveLength(2);
+      expect(capturedCreateManyArgs?.skipDuplicates).toBe(true);
     });
   });
 

@@ -10,12 +10,13 @@ describe("SkillService", () => {
 
   const mockSkills: Skill[] = [
     { id: "550e8400-e29b-41d4-a716-446655440001", name: "TypeScript", level: "Expert" },
-    { id: "550e8400-e29b-41d4-a716-446655440002", name: "React", level: "Intermediate" },
+    { id: "550e8400-e29b-41d4-a716-446655440002", name: "React", level: "Skillfull" },
   ];
 
   beforeEach(() => {
     mockRepository = {
       create: vi.fn(),
+      createMany: vi.fn(),
       findAll: vi.fn(),
       findById: vi.fn(),
       findManyByIds: vi.fn(),
@@ -25,26 +26,41 @@ describe("SkillService", () => {
     skillService = new SkillService(mockRepository);
   });
 
-  describe("create", () => {
-    it("should create skill successfully", async () => {
-      const input: SkillInputDTO = { name: "TypeScript", level: "Expert" };
-      const created: Skill = { id: "skill-1", ...input };
+  describe("createMany", () => {
+    it("should create multiple skills successfully", async () => {
+      const inputs: SkillInputDTO[] = [
+        { name: "TypeScript", level: "Expert" },
+        { name: "React", level: "Skillfull" },
+      ];
 
-      vi.mocked(mockRepository.create).mockResolvedValue(created);
+      vi.mocked(mockRepository.createMany).mockResolvedValue(mockSkills);
 
-      const result = await skillService.create(input);
+      const result = await skillService.createMany(inputs);
 
-      expect(mockRepository.create).toHaveBeenCalledWith(input);
+      expect(mockRepository.createMany).toHaveBeenCalledWith(inputs);
+      expect(result).toEqual(mockSkills);
+      expect(result).toHaveLength(2);
+    });
+
+    it("should create a single skill when array has one element", async () => {
+      const inputs: SkillInputDTO[] = [{ name: "TypeScript", level: "Experienced" }];
+      const created: Skill[] = [{ id: "skill-1", name: "TypeScript", level: "Experienced" }];
+
+      vi.mocked(mockRepository.createMany).mockResolvedValue(created);
+
+      const result = await skillService.createMany(inputs);
+
       expect(result).toEqual(created);
+      expect(result).toHaveLength(1);
     });
 
     it("should propagate repository error", async () => {
-      const input: SkillInputDTO = { name: "TypeScript", level: "Expert" };
+      const inputs: SkillInputDTO[] = [{ name: "TypeScript", level: "Expert" }];
       const error = new Error("Database error");
 
-      vi.mocked(mockRepository.create).mockRejectedValue(error);
+      vi.mocked(mockRepository.createMany).mockRejectedValue(error);
 
-      await expect(skillService.create(input)).rejects.toThrow("Database error");
+      await expect(skillService.createMany(inputs)).rejects.toThrow("Database error");
     });
   });
 

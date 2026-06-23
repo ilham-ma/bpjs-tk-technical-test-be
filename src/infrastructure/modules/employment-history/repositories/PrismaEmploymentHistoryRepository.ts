@@ -35,6 +35,16 @@ export class PrismaEmploymentHistoryRepository implements IEmploymentHistoryRepo
         });
       }
 
+      // Delete existing rows for this user that are not kept by id
+      // (run BEFORE creating new ones, so we don't wipe the freshly-created rows
+      // — Prisma treats `notIn: []` as matching every row)
+      const employmentIdsToKeep = itemsWithId
+        .map((i) => i.id)
+        .filter((id): id is string => !!id);
+      await tx.employmentHistory.deleteMany({
+        where: { userId, id: { notIn: employmentIdsToKeep } },
+      });
+
       // Create new employment histories
       for (const item of itemsWithoutId) {
         await tx.employmentHistory.create({
@@ -49,12 +59,6 @@ export class PrismaEmploymentHistoryRepository implements IEmploymentHistoryRepo
           },
         });
       }
-
-      // Delete all employment histories not in the payload
-      const employmentIdsToKeep = items.map((i) => i.id).filter((id): id is string => !!id);
-      await tx.employmentHistory.deleteMany({
-        where: { userId, id: { notIn: employmentIdsToKeep } },
-      });
     });
 
     return await this.findByUserId(userId);

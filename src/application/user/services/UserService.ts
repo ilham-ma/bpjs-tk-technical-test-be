@@ -26,9 +26,11 @@ export class UserService {
     const { skills, educations, employmentHistories, ...userData } = dto;
     const user = await this.userRepository.create(userData as any);
 
+    const skillIds = skills.map((s) => s.id).filter((id): id is string => !!id);
+
     const userWithSkillsEducationAndEmploymentHistories = {
       ...user,
-      skills: await this.skillRepository.syncUserSkills(user.id, skills),
+      skills: await this.skillRepository.linkUserSkills(user.id, skillIds),
       educations: await this.educationRepository.syncForUser(user.id, educations),
       employmentHistories: await this.employmentHistoryRepository.syncForUser(user.id, employmentHistories),
     };
@@ -63,7 +65,8 @@ export class UserService {
     let resultEmploymentHistories = existing.employmentHistories;
 
     if (skills !== undefined) {
-      resultSkills = await this.skillRepository.syncUserSkills(id, skills);
+      const skillIds = skills.map((s) => s.id).filter((sid): sid is string => !!sid);
+      resultSkills = await this.skillRepository.linkUserSkills(id, skillIds);
     }
 
     if (educations !== undefined) {

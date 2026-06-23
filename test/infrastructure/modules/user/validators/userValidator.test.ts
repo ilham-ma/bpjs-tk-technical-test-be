@@ -25,7 +25,7 @@ describe("userValidator", () => {
     dateOfBirth: "1990-01-15",
     photoUrl: "/photos/john.jpg",
     professionalSummary: "Experienced backend engineer",
-    skills: [{ name: "TypeScript", level: "Expert" }],
+    skills: [{ id: "550e8400-e29b-41d4-a716-446655440001", name: "TypeScript", level: "Expert" }],
     educations: [
       {
         school: "University of Technology",
@@ -224,11 +224,49 @@ describe("userValidator", () => {
       expect(skillsError?.msg).toContain("at least 1 item");
     });
 
+    it("should fail when skill missing id", async () => {
+      const req = {
+        body: {
+          ...validUserData,
+          skills: [{ name: "TypeScript", level: "Expert" }],
+        },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const skillError = errs.find((e) => e.path === "skills[0]");
+      expect(skillError?.msg).toContain("skill id is required");
+    });
+
+    it("should fail when skill id is not a valid UUID", async () => {
+      const req = {
+        body: {
+          ...validUserData,
+          skills: [{ id: "not-a-uuid", name: "TypeScript", level: "Expert" }],
+        },
+      } as any;
+
+      for (const validator of createUserValidator) {
+        await validator.run(req);
+      }
+
+      const errors = validationResult(req);
+      expect(errors.isEmpty()).toBe(false);
+      const errs = errors.array() as any[];
+      const skillError = errs.find((e) => e.path === "skills[0]");
+      expect(skillError?.msg).toContain("skill id must be a valid UUID");
+    });
+
     it("should fail when skill missing name", async () => {
       const req = {
         body: {
           ...validUserData,
-          skills: [{ level: "Expert" }],
+          skills: [{ id: "550e8400-e29b-41d4-a716-446655440001", level: "Expert" }],
         },
       } as any;
 
@@ -245,8 +283,8 @@ describe("userValidator", () => {
 
     it("should pass with valid skills", async () => {
       const validSkills = [
-        { name: "TypeScript", level: "Expert" },
-        { name: "Python", level: "Intermediate" },
+        { id: "550e8400-e29b-41d4-a716-446655440001", name: "TypeScript", level: "Expert" },
+        { id: "550e8400-e29b-41d4-a716-446655440002", name: "Python", level: "Intermediate" },
       ];
       const req = {
         body: { ...validUserData, skills: validSkills },
@@ -507,7 +545,7 @@ describe("userValidator", () => {
     it("should pass with valid skills on update", async () => {
       const validSkills = [
         { id: "550e8400-e29b-41d4-a716-446655440001", name: "TypeScript", level: "Expert" },
-        { name: "Python", level: "Intermediate" },
+        { id: "550e8400-e29b-41d4-a716-446655440002", name: "Python", level: "Intermediate" },
       ];
       const req = {
         body: { ...validUserData, skills: validSkills },

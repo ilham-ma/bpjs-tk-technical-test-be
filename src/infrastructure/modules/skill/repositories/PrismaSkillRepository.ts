@@ -11,6 +11,16 @@ export class PrismaSkillRepository implements ISkillRepository {
     });
   }
 
+  async createMany(inputs: SkillInputDTO[]): Promise<Skill[]> {
+    return await prisma.$transaction(
+      inputs.map((input) =>
+        prisma.skill.create({
+          data: { name: input.name as string, level: input.level as any },
+        })
+      )
+    );
+  }
+
   async findAll(): Promise<Skill[]> {
     return await prisma.skill.findMany();
   }
@@ -23,48 +33,23 @@ export class PrismaSkillRepository implements ISkillRepository {
     return await prisma.skill.findMany({ where: { id: { in: ids } } });
   }
 
-  async syncUserSkills(userId: string, skills: SkillInputDTO[]): Promise<Skill[]> {
-    const itemsWithId = skills.filter((s) => s.id);
-    const itemsWithoutId = skills.filter((s) => !s.id);
+  async linkUserSkills(userId: string, skillIds: string[]): Promise<Skill[]> {
+    const uniqueIds = Array.from(new Set(skillIds));
 
     await prisma.$transaction(async (tx) => {
-      // Validate items with ID belong to current user and exist
-      const existingUserSkills = await tx.userSkill.findMany({
-        where: { userId },
-        select: { skillId: true },
+      const existing = await tx.skill.findMany({
+        where: { id: { in: uniqueIds } },
+        select: { id: true },
       });
-      const userSkillIds = new Set(existingUserSkills.map((us) => us.skillId));
-
-      for (const item of itemsWithId) {
-        if (!userSkillIds.has(item.id!)) {
-          throw new AppError(`Skill ${item.id} does not belong to this user`, 403);
-        }
-        // Update existing skill in catalog
-        if (item.name && item.level) {
-          await tx.skill.update({
-            where: { id: item.id },
-            data: { name: item.name, level: item.level as any },
-          });
-        }
+      const existingIds = new Set(existing.map((s) => s.id));
+      const missing = uniqueIds.filter((id) => !existingIds.has(id));
+      if (missing.length > 0) {
+        throw new AppError(`Skill id(s) not found: ${missing.join(", ")}`, 400);
       }
 
-      // Create new skills and link them
-      for (const item of itemsWithoutId) {
-        if (!item.name || !item.level) {
-          throw new AppError("Skill name and level are required when creating a new skill", 400);
-        }
-        const newSkill = await tx.skill.create({
-          data: { name: item.name, level: item.level },
-        });
-        await tx.userSkill.create({
-          data: { userId, skillId: newSkill.id },
-        });
-      }
-
-      // Delete all user-skill links not in the payload
-      const skillIdsToKeep = skills.map((s) => s.id).filter((id): id is string => !!id);
-      await tx.userSkill.deleteMany({
-        where: { userId, skillId: { notIn: skillIdsToKeep } },
+      await tx.userSkill.createMany({
+        data: uniqueIds.map((skillId) => ({ userId, skillId })),
+        skipDuplicates: true,
       });
     });
 

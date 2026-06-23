@@ -35,6 +35,16 @@ export class PrismaEducationRepository implements IEducationRepository {
         });
       }
 
+      // Delete existing educations for this user that are not kept by id
+      // (run BEFORE creating new ones, so we don't wipe the freshly-created rows
+      // — Prisma treats `notIn: []` as matching every row)
+      const educationIdsToKeep = itemsWithId
+        .map((e) => e.id)
+        .filter((id): id is string => !!id);
+      await tx.education.deleteMany({
+        where: { userId, id: { notIn: educationIdsToKeep } },
+      });
+
       // Create new educations
       for (const item of itemsWithoutId) {
         await tx.education.create({
@@ -49,12 +59,6 @@ export class PrismaEducationRepository implements IEducationRepository {
           },
         });
       }
-
-      // Delete all educations not in the payload
-      const educationIdsToKeep = educations.map((e) => e.id).filter((id): id is string => !!id);
-      await tx.education.deleteMany({
-        where: { userId, id: { notIn: educationIdsToKeep } },
-      });
     });
 
     return await this.findByUserId(userId);

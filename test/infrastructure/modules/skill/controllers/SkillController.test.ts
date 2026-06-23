@@ -9,41 +9,45 @@ describe("SkillController", () => {
 
   const mockSkills: Skill[] = [
     { id: "skill-1", name: "TypeScript", level: "Expert" },
-    { id: "skill-2", name: "React", level: "Intermediate" },
+    { id: "skill-2", name: "React", level: "Skillfull" },
   ];
 
   beforeEach(() => {
     mockService = {
-      create: vi.fn(),
+      createMany: vi.fn(),
       findAll: vi.fn(),
     } as any;
     skillController = new SkillController(mockService);
   });
 
   describe("create", () => {
-    it("should create skill and return 201 status", async () => {
-      const req = { body: { name: "TypeScript", level: "Expert" } } as any;
+    it("should create skills from array body and return 201 status", async () => {
+      const req = {
+        body: [
+          { name: "TypeScript", level: "Expert" },
+          { name: "React", level: "Skillfull" },
+        ],
+      } as any;
       const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
       const next = vi.fn();
-      const created: Skill = { id: "skill-1", name: "TypeScript", level: "Expert" };
 
-      vi.mocked(mockService.create).mockResolvedValue(created);
+      vi.mocked(mockService.createMany).mockResolvedValue(mockSkills);
 
       await skillController.create(req, res, next);
 
-      expect(mockService.create).toHaveBeenCalledWith(req.body);
+      expect(mockService.createMany).toHaveBeenCalledWith(req.body);
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ status: "success", data: created });
+      expect(res.json).toHaveBeenCalledWith({ status: "success", data: mockSkills });
       expect(next).not.toHaveBeenCalled();
     });
 
     it("should call next with error when service throws", async () => {
-      const req = { body: { name: "TypeScript", level: "Expert" } } as any;
+      const req = { body: [{ name: "TypeScript", level: "Expert" }] } as any;
       const res = { status: vi.fn().mockReturnThis(), json: vi.fn() } as any;
       const next = vi.fn();
       const error = new Error("Database error");
 
-      vi.mocked(mockService.create).mockRejectedValue(error);
+      vi.mocked(mockService.createMany).mockRejectedValue(error);
 
       await skillController.create(req, res, next);
 
